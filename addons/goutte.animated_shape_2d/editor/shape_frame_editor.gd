@@ -132,6 +132,7 @@ func update():
 	%SpriteButton.tooltip_text = "%s/%d" % [self.animation_name, self.frame_index]
 	if shape_frame != null:
 		%SpriteButton.tooltip_text += " %s" % [shape_frame]
+		%SpriteButton.tooltip_text += "\nClick to edit in the Inspector."
 	
 	# X. Action button: Create
 	if shape_frame == null:

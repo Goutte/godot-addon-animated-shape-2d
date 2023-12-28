@@ -71,4 +71,3 @@ Roadmap
 > 🦊 _Feedback and contributions are welcome!_
 > https://github.com/Goutte/godot-addon-animated-shape-2d
 
-

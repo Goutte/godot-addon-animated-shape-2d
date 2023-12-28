@@ -10,7 +10,7 @@ A [Godot](https://godotengine.org/) `4.x` addon that adds an `AnimatedShape2D` t
 
 It is useful to make custom hitboxes, hurtboxes, and hardboxes for each pose of your character, if you animated it using `AnimatedSprite2D`.
 
-It comes with an Editor GUI to preview your shapes, in the fashion of the `SpriteFrames` bottom panel.
+It comes with an Editor GUI to preview and edit your shapes, in the fashion of the `SpriteFrames` bottom panel.
 
 ![A screenshot of the GUI showing a custom "Animated Shape" bottom panel in Godot](./addons/goutte.animated_shape_2d/extras/screenshot_01.png)
 
@@ -37,7 +37,7 @@ Then, enable the plugin in `Scene > Project Settings > Plugins`.
 Usage
 -----
 
-Please see the [addons' README](./addons/goutte.animated-shape-2d/README.md).
+Please see the [addons' README](./addons/goutte.animated_shape_2d/README.md).
 
 
 -----
