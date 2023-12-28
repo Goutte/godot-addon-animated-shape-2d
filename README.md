@@ -12,7 +12,7 @@ It is useful to make custom hitboxes, hurtboxes, and hardboxes for each pose of 
 
 It comes with an Editor GUI to preview your shapes, in the fashion of the `SpriteFrames` bottom panel.
 
-![A screenshot of the GUI showing a custom "Animated Shape" bottom panel in Godot](./addons/goutte.animated-shape-2d/extras/screenshot_01.png)
+![A screenshot of the GUI showing a custom "Animated Shape" bottom panel in Godot](./addons/goutte.animated_shape_2d/extras/screenshot_01.png)
 
 
 Features
