@@ -2,8 +2,8 @@
 * text=auto eol=lf
 
 # Exclude irrelevant files when downloading from the Asset Library.
-/README.md                              export-ignore
-/LICENSE                                export-ignore
-/.gitignore                             export-ignore
-/.gitattributes                         export-ignore
-/addons/goutte.animated-shape-2d/extra  export-ignore
+/README.md                               export-ignore
+/LICENSE                                 export-ignore
+/.gitignore                              export-ignore
+/.gitattributes                          export-ignore
+/addons/goutte.animated-shape-2d/extras  export-ignore

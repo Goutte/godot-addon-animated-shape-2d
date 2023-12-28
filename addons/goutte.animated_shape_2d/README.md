@@ -1,8 +1,9 @@
 Animated Shape 2D Addon for Godot
 ---------------------------------
 
-[![MIT](https://img.shields.io/github/license/Goutte/godot-addon-animated-shape-2d.svg)](https://github.com/Goutte/godot-addon-animated-shape-2d)
-[![Release](https://img.shields.io/github/release/Goutte/godot-addon-animated-shape-2d.svg)](https://github.com/Goutte/godot-addon-animated-shape-2d/releases)
+[![MIT](https://img.shields.io/github/license/Goutte/godot-addon-animated-shape-2d.svg?style=for-the-badge)](https://github.com/Goutte/godot-addon-animated-shape-2d)
+[![Release](https://img.shields.io/github/release/Goutte/godot-addon-animated-shape-2d.svg?style=for-the-badge)](https://github.com/Goutte/godot-addon-animated-shape-2d/releases)
+[![FeedStarvingDev](https://img.shields.io/liberapay/patrons/Goutte.svg?style=for-the-badge&logo=liberapay)](https://liberapay.com/Goutte/)
 
 
 A [Godot](https://godotengine.org/) `4.x` addon that adds an `AnimatedShape2D` that can provide a custom shape for each frame of each animation of an `AnimatedSprite2D`.
@@ -68,5 +69,6 @@ Roadmap
 -----
 
 > 🦊 _Feedback and contributions are welcome!_
+> https://github.com/Goutte/godot-addon-animated-shape-2d
 
 

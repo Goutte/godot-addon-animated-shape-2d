@@ -1,24 +1,27 @@
-Unicode Normalizer Addon for Godot
-----------------------------------
+Animated Shape 2D Addon for Godot
+---------------------------------
 
-[![MIT](https://img.shields.io/github/license/Goutte/godot-addon-unicode-normalizer.svg)](https://github.com/Goutte/godot-addon-unicode-normalizer)
-[![Release](https://img.shields.io/github/release/Goutte/godot-addon-unicode-normalizer.svg)](https://github.com/Goutte/godot-addon-unicode-normalizer/releases)
+[![MIT](https://img.shields.io/github/license/Goutte/godot-addon-animated-shape-2d.svg?style=for-the-badge)](https://github.com/Goutte/godot-addon-animated-shape-2d)
+[![Release](https://img.shields.io/github/release/Goutte/godot-addon-animated-shape-2d.svg?style=for-the-badge)](https://github.com/Goutte/godot-addon-animated-shape-2d/releases)
+[![FeedStarvingDev](https://img.shields.io/liberapay/patrons/Goutte.svg?style=for-the-badge&logo=liberapay)](https://liberapay.com/Goutte/)
 
 
-A [Godot](https://godotengine.org/) `4.x` addon that adds a `UnicodeNormalizer` singleton.
+A [Godot](https://godotengine.org/) `4.x` addon that adds an `AnimatedShape2D` that can provide a custom shape for each frame of each animation of an `AnimatedSprite2D`.
 
-The `UnicodeNormalizer` helps removing diacritics and substituting tough characters.
-It is handy when making your own fonts, or font engines.
+It is useful to make custom hitboxes, hurtboxes, and hardboxes for each pose of your character, if you animated it using `AnimatedSprite2D`.
 
-> _"Dès Noël, où un zéphyr haï me vêt d'œufs..." → "Des Noel, ou un zephyr hai me vet d'oeufs..."_
+It comes with an Editor GUI to preview your shapes, in the fashion of the `SpriteFrames` bottom panel.
+
+![A screenshot of the GUI showing a custom "Animated Shape" bottom panel in Godot](./addons/goutte.animated-shape-2d/extras/screenshot_01.png)
 
 
 Features
 --------
 
-- fast (benchmarked, uses binary search)
-- light (`~16Kio` database)
-- derived from unicode's database of decompositions and substitutions
+- customize a shape for each frame of your animations
+- configurable fallbacks
+- editor GUI, updated in real time
+- supports undo & redo where it matters
 - extensible
 
 
@@ -34,7 +37,7 @@ Then, enable the plugin in `Scene > Project Settings > Plugins`.
 Usage
 -----
 
-Please see the [addons' README](./addons/goutte.unicode/README.md).
+Please see the [addons' README](./addons/goutte.animated-shape-2d/README.md).
 
 
 -----
