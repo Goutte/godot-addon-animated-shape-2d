@@ -1,0 +1,115 @@
+[gd_scene load_steps=8 format=3 uid="uid://c6fdijn2r2lcs"]
+
+[ext_resource type="Script" path="res://addons/goutte.animated_shape_2d/editor/shape_frame_editor.gd" id="1_pmp4u"]
+[ext_resource type="Texture2D" uid="uid://bas71pf106lg3" path="res://sprites/characters/noir/front/idle/noir_character_idle2.png" id="2_0plky"]
+[ext_resource type="Texture2D" uid="uid://hsf5o8ys0vo3" path="res://addons/goutte.animated_shape_2d/editor/icons/remove.png" id="3_bm3kb"]
+[ext_resource type="Texture2D" uid="uid://cbgoa2ilmautt" path="res://addons/goutte.animated_shape_2d/editor/icons/new.png" id="3_j1q7m"]
+[ext_resource type="Texture2D" uid="uid://085a76nwyjqf" path="res://addons/goutte.animated_shape_2d/editor/icons/copy.png" id="4_tt4qt"]
+[ext_resource type="Texture2D" uid="uid://c5mpguq347mtg" path="res://addons/goutte.animated_shape_2d/editor/icons/paste.png" id="5_tdv8b"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_r4uwg"]
+
+[node name="ShapeFrameEditor" type="MarginContainer"]
+light_mask = 0
+offset_right = 72.0
+offset_bottom = 72.0
+auto_translate = false
+localize_numeral_system = false
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+script = ExtResource("1_pmp4u")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="SpriteButton" type="Button" parent="VBoxContainer/MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_default_cursor_shape = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_r4uwg")
+
+[node name="SpriteFrameTexture" type="TextureRect" parent="VBoxContainer/MarginContainer"]
+unique_name_in_owner = true
+light_mask = 0
+layout_mode = 2
+auto_translate = false
+localize_numeral_system = false
+mouse_filter = 2
+texture = ExtResource("2_0plky")
+stretch_mode = 5
+
+[node name="ZoomAdjuster" type="Node2D" parent="VBoxContainer/MarginContainer/SpriteFrameTexture"]
+unique_name_in_owner = true
+
+[node name="Origin" type="Marker2D" parent="VBoxContainer/MarginContainer/SpriteFrameTexture/ZoomAdjuster"]
+unique_name_in_owner = true
+gizmo_extents = 6.0
+
+[node name="ShapeHolder" type="CollisionShape2D" parent="VBoxContainer/MarginContainer/SpriteFrameTexture/ZoomAdjuster/Origin"]
+unique_name_in_owner = true
+
+[node name="ActionsContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="CreateButton" type="Button" parent="VBoxContainer/ActionsContainer"]
+unique_name_in_owner = true
+texture_filter = 1
+texture_repeat = 1
+layout_mode = 2
+tooltip_text = "Create a custom collision shape configuration (ShapeFrame2D) for this frame.  It will appear in the Inspector."
+focus_mode = 0
+mouse_default_cursor_shape = 2
+icon = ExtResource("3_j1q7m")
+flat = true
+icon_alignment = 1
+
+[node name="CopyButton" type="Button" parent="VBoxContainer/ActionsContainer"]
+unique_name_in_owner = true
+texture_filter = 1
+texture_repeat = 1
+layout_mode = 2
+tooltip_text = "Copy the collision shape customization of this frame into the clipboard."
+focus_mode = 0
+mouse_default_cursor_shape = 2
+icon = ExtResource("4_tt4qt")
+flat = true
+icon_alignment = 1
+
+[node name="PasteButton" type="Button" parent="VBoxContainer/ActionsContainer"]
+unique_name_in_owner = true
+texture_filter = 1
+texture_repeat = 1
+layout_mode = 2
+tooltip_text = "Paste the copied collision shape customization from the clipboard into this frame.
+Beware, this makes a shallow copy and therefore the two frames will now be edited together.
+Use CTRL+Click here to create a deep copy and decouple the frames."
+focus_mode = 0
+mouse_default_cursor_shape = 2
+icon = ExtResource("5_tdv8b")
+flat = true
+icon_alignment = 1
+
+[node name="DeleteButton" type="Button" parent="VBoxContainer/ActionsContainer"]
+unique_name_in_owner = true
+texture_filter = 1
+texture_repeat = 1
+layout_mode = 2
+tooltip_text = "Delete the collision shape customization for this frame."
+focus_mode = 0
+mouse_default_cursor_shape = 2
+icon = ExtResource("3_bm3kb")
+flat = true
+icon_alignment = 1
+
+[connection signal="pressed" from="VBoxContainer/MarginContainer/SpriteButton" to="." method="_on_sprite_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/ActionsContainer/CreateButton" to="." method="_on_create_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/ActionsContainer/CopyButton" to="." method="_on_copy_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/ActionsContainer/PasteButton" to="." method="_on_paste_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/ActionsContainer/DeleteButton" to="." method="_on_delete_button_pressed"]
