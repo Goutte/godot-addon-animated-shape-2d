@@ -29,10 +29,17 @@ layout_mode = 2
 
 [node name="SpriteButton" type="Button" parent="VBoxContainer/MarginContainer"]
 unique_name_in_owner = true
+clip_contents = true
 layout_mode = 2
 mouse_default_cursor_shape = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_r4uwg")
+
+[node name="BackgroundColor" type="ColorRect" parent="VBoxContainer/MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 1
+color = Color(0.341176, 0.341176, 0.341176, 1)
 
 [node name="SpriteFrameTexture" type="TextureRect" parent="VBoxContainer/MarginContainer"]
 unique_name_in_owner = true

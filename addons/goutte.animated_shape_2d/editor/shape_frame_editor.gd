@@ -19,6 +19,7 @@ var frame_index: int
 var zoom_level := 1.0
 
 var undo_redo: EditorUndoRedoManager
+var background_color := Color.WEB_GRAY
 
 
 ## Mandatory dependency injection, since it's best to leave _init() alone.
@@ -37,6 +38,14 @@ func set_undo_redo(undo_redo: EditorUndoRedoManager):
 	self.undo_redo = undo_redo
 
 
+func set_zoom_level(new_zoom_level: float):
+	zoom_level = new_zoom_level
+
+
+func set_background_color(new_background_color: Color):
+	background_color = new_background_color
+
+
 func _enter_tree():
 	connect_to_shape_frame()
 
@@ -47,7 +56,7 @@ func _exit_tree():
 
 func build():
 	update()
-
+	
 
 func get_shape_frame() -> ShapeFrame2D:
 	if self.animated_shape == null:
@@ -128,7 +137,10 @@ func update():
 	# IV. Adjust the preview to the zoom level
 	%ZoomAdjuster.scale = Vector2.ONE * self.zoom_level
 	
-	# V. Tooltip on the main sprite button
+	# V. Background clear color.
+	%BackgroundColor.color = self.background_color
+	
+	# VI. Tooltip on the main sprite button
 	%SpriteButton.tooltip_text = "%s/%d" % [self.animation_name, self.frame_index]
 	if shape_frame != null:
 		%SpriteButton.tooltip_text += " %s" % [shape_frame]
@@ -157,10 +169,6 @@ func update():
 	else:
 		%DeleteButton.visible = true
 		%DeleteButton.disabled = false
-
-
-func set_zoom_level(new_zoom_level: float):
-	zoom_level = new_zoom_level
 
 
 func inspect_shape_frame():

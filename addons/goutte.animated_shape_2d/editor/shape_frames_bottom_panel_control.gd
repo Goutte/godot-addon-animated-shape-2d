@@ -13,6 +13,7 @@ var animated_shape: AnimatedShape2D
 var editor_plugin: EditorPlugin
 
 var zoom_level := 1.0: set = set_zoom_level
+var background_color := Color.WEB_GRAY
 
 
 func _ready():
@@ -36,6 +37,8 @@ func rebuild_gui(
 ):
 	clear()
 	self.animated_shape = animated_shape
+	#%BackgroundColorPicker.color = …  # from settings ?
+	self.background_color = %BackgroundColorPicker.color
 	var animation_name := animated_shape.animated_sprite.animation
 	rebuild_animation_names_item_list(animated_shape, animation_name)
 
@@ -76,22 +79,31 @@ func rebuild_view_of_animation(animation_name: String):
 		frame_scene.configure(self.animated_shape, animation_name, frame_index)
 		frame_scene.set_undo_redo(self.editor_plugin.get_undo_redo())
 		frame_scene.set_zoom_level(self.zoom_level)
+		frame_scene.set_background_color(self.background_color)
 		frame_scene.build()
 		frames_container.add_child(frame_scene)
+
+
+func rebuild_view_of_animation_by_index(item_index: int):
+	var animation_name := self.animation_names_item_list.get_item_text(item_index)
+	rebuild_view_of_animation(animation_name)
+
+
+func rebuild_view_of_selected_animation():
+	var selected_animations_indices := self.animation_names_item_list.get_selected_items()
+	if not selected_animations_indices.is_empty():
+		rebuild_view_of_animation_by_index(selected_animations_indices[0])
 
 
 func set_zoom_level(new_zoom_level: float):
 	if new_zoom_level == zoom_level:
 		return
 	zoom_level = new_zoom_level
-	var selected_animations_indices := self.animation_names_item_list.get_selected_items()
-	if not selected_animations_indices.is_empty():
-		on_animation_selected(selected_animations_indices[0])
+	rebuild_view_of_selected_animation()
 
 
 func on_animation_selected(item_index: int):
-	var animation_name := self.animation_names_item_list.get_item_text(item_index)
-	rebuild_view_of_animation(animation_name)
+	rebuild_view_of_animation_by_index(item_index)
 
 
 func _on_zoom_less_button_pressed():
@@ -116,3 +128,9 @@ func _on_zoom_more_button_pressed():
 	new_zoom_level = max(1.0, new_zoom_level)
 	new_zoom_level = min(10.0, new_zoom_level)
 	set_zoom_level(new_zoom_level)
+
+
+func _on_background_color_picker_color_changed(color: Color):
+	self.background_color = color
+	rebuild_view_of_selected_animation()
+	

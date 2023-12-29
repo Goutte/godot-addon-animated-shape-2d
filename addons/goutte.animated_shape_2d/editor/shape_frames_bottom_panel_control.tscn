@@ -34,29 +34,41 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 3.0
 
-[node name="HBoxContainer" type="HBoxContainer" parent="HSplitContainer/MarginContainer"]
+[node name="ActionContainer" type="HBoxContainer" parent="HSplitContainer/MarginContainer"]
 layout_mode = 2
 
-[node name="ZoomLessButton" type="Button" parent="HSplitContainer/MarginContainer/HBoxContainer"]
+[node name="ZoomLessButton" type="Button" parent="HSplitContainer/MarginContainer/ActionContainer"]
 layout_mode = 2
 tooltip_text = "Zoom out the previews."
 mouse_default_cursor_shape = 2
 icon = ExtResource("2_rtykk")
 flat = true
 
-[node name="ZoomResetButton" type="Button" parent="HSplitContainer/MarginContainer/HBoxContainer"]
+[node name="ZoomResetButton" type="Button" parent="HSplitContainer/MarginContainer/ActionContainer"]
 layout_mode = 2
 tooltip_text = "Reset the zoom level of the previews."
 mouse_default_cursor_shape = 2
 icon = ExtResource("3_h377a")
 flat = true
 
-[node name="ZoomMoreButton" type="Button" parent="HSplitContainer/MarginContainer/HBoxContainer"]
+[node name="ZoomMoreButton" type="Button" parent="HSplitContainer/MarginContainer/ActionContainer"]
 layout_mode = 2
 tooltip_text = "Zoom in the previews."
 mouse_default_cursor_shape = 2
 icon = ExtResource("3_2217o")
 flat = true
+
+[node name="VSeparator" type="VSeparator" parent="HSplitContainer/MarginContainer/ActionContainer"]
+layout_mode = 2
+
+[node name="BackgroundColorPicker" type="ColorPickerButton" parent="HSplitContainer/MarginContainer/ActionContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 31)
+layout_mode = 2
+tooltip_text = "Choose a color for the background of the previews."
+focus_mode = 0
+mouse_default_cursor_shape = 2
+color = Color(0.282353, 0.282353, 0.282353, 1)
 
 [node name="ScrollContainer" type="ScrollContainer" parent="HSplitContainer/MarginContainer"]
 layout_mode = 2
@@ -70,6 +82,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[connection signal="pressed" from="HSplitContainer/MarginContainer/HBoxContainer/ZoomLessButton" to="." method="_on_zoom_less_button_pressed"]
-[connection signal="pressed" from="HSplitContainer/MarginContainer/HBoxContainer/ZoomResetButton" to="." method="_on_zoom_reset_button_pressed"]
-[connection signal="pressed" from="HSplitContainer/MarginContainer/HBoxContainer/ZoomMoreButton" to="." method="_on_zoom_more_button_pressed"]
+[connection signal="pressed" from="HSplitContainer/MarginContainer/ActionContainer/ZoomLessButton" to="." method="_on_zoom_less_button_pressed"]
+[connection signal="pressed" from="HSplitContainer/MarginContainer/ActionContainer/ZoomResetButton" to="." method="_on_zoom_reset_button_pressed"]
+[connection signal="pressed" from="HSplitContainer/MarginContainer/ActionContainer/ZoomMoreButton" to="." method="_on_zoom_more_button_pressed"]
+[connection signal="color_changed" from="HSplitContainer/MarginContainer/ActionContainer/BackgroundColorPicker" to="." method="_on_background_color_picker_color_changed"]
