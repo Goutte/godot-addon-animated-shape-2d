@@ -10,14 +10,11 @@ const FRAME_SCENE := preload("./shape_frame_editor.tscn")
 var animated_shape: AnimatedShape2D
 
 ## Used to access Editor things like UndoRedo.
+## Someday we will not need this anymore, hopefully.
 var editor_plugin: EditorPlugin
 
 var zoom_level := 1.0: set = set_zoom_level
 var background_color := Color.WEB_GRAY
-
-
-func _ready():
-	self.animation_names_item_list.item_selected.connect(on_animation_selected)
 
 
 func configure(
@@ -37,7 +34,7 @@ func rebuild_gui(
 ):
 	clear()
 	self.animated_shape = animated_shape
-	#%BackgroundColorPicker.color = …  # from settings ?
+	#%BackgroundColorPicker.color = …  # from editor settings ?
 	self.background_color = %BackgroundColorPicker.color
 	var animation_name := animated_shape.animated_sprite.animation
 	rebuild_animation_names_item_list(animated_shape, animation_name)
@@ -102,8 +99,8 @@ func set_zoom_level(new_zoom_level: float):
 	rebuild_view_of_selected_animation()
 
 
-func on_animation_selected(item_index: int):
-	rebuild_view_of_animation_by_index(item_index)
+func _on_animation_names_item_list_item_selected(index: int):
+	rebuild_view_of_animation_by_index(index)
 
 
 func _on_zoom_less_button_pressed():
@@ -122,6 +119,7 @@ func _on_zoom_reset_button_pressed():
 
 func _on_zoom_more_button_pressed():
 	var new_zoom_level := self.zoom_level + 1.0
+	# Note: current zoom logic in TextureRect won't allow going below 1
 	#if self.zoom_level <= 1.0:
 		#new_zoom_level = self.zoom_level * 2.0
 	#new_zoom_level = max(0.125, new_zoom_level)
@@ -133,4 +131,4 @@ func _on_zoom_more_button_pressed():
 func _on_background_color_picker_color_changed(color: Color):
 	self.background_color = color
 	rebuild_view_of_selected_animation()
-	
+

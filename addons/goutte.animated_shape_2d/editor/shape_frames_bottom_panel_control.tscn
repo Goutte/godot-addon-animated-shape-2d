@@ -82,6 +82,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
+[connection signal="item_selected" from="HSplitContainer/AnimationNamesItemList" to="." method="_on_animation_names_item_list_item_selected"]
 [connection signal="pressed" from="HSplitContainer/MarginContainer/ActionContainer/ZoomLessButton" to="." method="_on_zoom_less_button_pressed"]
 [connection signal="pressed" from="HSplitContainer/MarginContainer/ActionContainer/ZoomResetButton" to="." method="_on_zoom_reset_button_pressed"]
 [connection signal="pressed" from="HSplitContainer/MarginContainer/ActionContainer/ZoomMoreButton" to="." method="_on_zoom_more_button_pressed"]
