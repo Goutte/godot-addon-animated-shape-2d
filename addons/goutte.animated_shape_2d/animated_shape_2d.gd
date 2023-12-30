@@ -11,7 +11,7 @@ class_name AnimatedShape2D
 #  / ____ \| | | | | | | | | | (_| | ||  __/ (_| |____) | | | | (_| | |_) |  __/
 # /_/    \_\_| |_|_|_| |_| |_|\__,_|\__\___|\__,_|_____/|_| |_|\__,_| .__/ \___|
 #                                                                   | |
-# v0.1.0-20231227                                                   |_|
+# v0.1.2-20231229                                                   |_|
 
 
 ## Animated sprite we're going to watch to figure out which shape we want.
@@ -42,10 +42,17 @@ class_name AnimatedShape2D
 ## and shapes only change per animation.
 @export var use_previous_as_fallback := false
 
+## Flip horizontally the collision shapes when the animated sprite is flipped,
+## by inverting the scale of their parent Area2D.  Only works on collision
+## shapes that are children of Area2D, to avoid weird behaviors with physics.
+@export var handle_flip_h := true
+
 
 var fallback_shape: Shape2D
 var fallback_position: Vector2
 var fallback_disabled: bool
+var initial_scale: Vector2
+var collision_shape_parent: Node2D
 
 
 func _ready():
@@ -65,9 +72,14 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 
 func setup():
+	if self.collision_shape == null:
+		return
 	self.fallback_shape = self.collision_shape.shape
 	self.fallback_position = self.collision_shape.position
 	self.fallback_disabled = self.collision_shape.disabled
+	self.collision_shape_parent = self.collision_shape.get_parent()
+	if self.collision_shape_parent != null:
+		self.initial_scale = self.collision_shape_parent.scale
 	self.animated_sprite.frame_changed.connect(update_shape)
 
 
@@ -92,3 +104,19 @@ func update_shape():
 	self.collision_shape.shape = shape
 	self.collision_shape.position = position
 	self.collision_shape.disabled = disabled
+	if self.handle_flip_h and is_collision_shape_parent_flippable():
+		# Improvement idea: flip the CollisionBody2D itself and mirror its x pos
+		if self.animated_sprite.flip_h:
+			self.collision_shape_parent.scale.x = -1.0 * self.initial_scale.x
+		else:
+			self.collision_shape_parent.scale.x = 1.0 * self.initial_scale.x
+
+
+## We don't want to flip PhysicsBodies because it creates odd behaviors.
+## Override this method if that's what you want for some reason.
+func is_collision_shape_parent_flippable() -> bool:
+	return (
+		self.collision_shape_parent != null
+		and
+		not (self.collision_shape_parent is PhysicsBody2D)
+	)
