@@ -4,8 +4,9 @@ extends Control
 ## Shows a preview of the sprite and the shape, as well as action buttons.
 class_name ShapeFrameEditor
 
-# Don't use @ready wince we're using nodes before _ready
-#@onready var sprite_texture := %SpriteFrameTexture
+
+const SHAPE_PREVIEW_SCRIPT := preload("./shape_preview.gd")
+
 
 ## Animated shape resource we are editing.
 ## This holds enough data to configure a CollisionShape2D for a specific frame.
@@ -17,9 +18,10 @@ var frame_index: int
 
 ## Zoom level of the preview.  Only integers are supported in there for now.
 var zoom_level := 1.0
+## Bakground color of the preview.
+var background_color := Color.WEB_GRAY
 
 var undo_redo: EditorUndoRedoManager
-var background_color := Color.WEB_GRAY
 
 
 ## Mandatory dependency injection, since it's best to leave _init() alone.
@@ -52,11 +54,14 @@ func _enter_tree():
 
 func _exit_tree():
 	disconnect_from_shape_frame()
+	remove_preview_of_shape_frame()
 
 
-func build():
+func build(button_group: ButtonGroup):
 	update()
-	
+	# I had to set the ButtonGroup procedurally, a resource file won't work.
+	%SpriteButton.button_group = button_group
+
 
 func get_shape_frame() -> ShapeFrame2D:
 	if self.animated_shape == null:
@@ -144,7 +149,7 @@ func update():
 	%SpriteButton.tooltip_text = "%s/%d" % [self.animation_name, self.frame_index]
 	if shape_frame != null:
 		%SpriteButton.tooltip_text += " %s" % [shape_frame]
-		%SpriteButton.tooltip_text += "\nClick to edit in the Inspector."
+		%SpriteButton.tooltip_text += "\nClick to edit."
 	
 	# X. Action button: Create
 	if shape_frame == null:
@@ -154,7 +159,15 @@ func update():
 		%CreateButton.visible = false
 		%CreateButton.disabled = true
 	
-	# XI. Action button: Copy
+	# XI. Action button: Edit
+	#if shape_frame == null:
+		#%EditButton.visible = false
+		#%EditButton.disabled = true
+	#else:
+		#%EditButton.visible = true
+		#%EditButton.disabled = false
+	
+	# XII. Action button: Copy
 	if shape_frame == null:
 		%CopyButton.visible = false
 		%CopyButton.disabled = true
@@ -169,21 +182,211 @@ func update():
 	else:
 		%DeleteButton.visible = true
 		%DeleteButton.disabled = false
+	
+	# L. 2D View Preview / Mouse GUI Editor
+	if is_preview_showing():
+		preview_shape_frame()
 
 
 func inspect_shape_frame():
 	var shape_frame := get_shape_frame()
 	if shape_frame == null:
+		if self.animated_shape:
+			EditorInterface.edit_node(self.animated_shape)
 		return
 	EditorInterface.edit_resource(shape_frame)
+
+
+#  _____                _
+# |  __ \              (_)
+# | |__) | __ _____   ___  _____      __
+# |  ___/ '__/ _ \ \ / / |/ _ \ \ /\ / /
+# | |   | | |  __/\ V /| |  __/\ V  V /
+# |_|   |_|  \___| \_/ |_|\___| \_/\_/
+#
+# The big one shown in the 2D Editor when we select this shape frame.
+# This is actually more than a preview since we can *edit* the shape with it.
+
+
+var sprite_preview: AnimatedSprite2D
+var preview_background: ColorRect
+var preview_shape: CollisionShape2D
+
+
+func is_preview_showing() -> bool:
+	return is_instance_valid(self.sprite_preview)
+
+
+func remove_preview_of_shape_frame():
+	if is_instance_valid(preview_shape):
+		preview_shape.queue_free()
+		preview_shape = null
+	if is_instance_valid(preview_background):
+		preview_background.queue_free()
+		preview_background = null
+	if is_instance_valid(sprite_preview):
+		sprite_preview.queue_free()
+		sprite_preview = null
+
+
+func preview_shape_frame():
+	if not is_instance_valid(sprite_preview):
+		sprite_preview = animated_shape.animated_sprite.duplicate()
+		sprite_preview.name = "PreviewAnimatedSprite2D"
+		sprite_preview.owner = null
+	sprite_preview.animation = self.animation_name
+	sprite_preview.frame = self.frame_index
+	
+	if not is_instance_valid(preview_background):
+		preview_background = ColorRect.new()
+		preview_background.name = "PreviewBackgroundColorRect"
+		preview_background.owner = null
+		preview_background.show_behind_parent = true
+		preview_background.set_anchors_preset(PRESET_FULL_RECT)
+		if sprite_preview.centered:
+			var s := sprite_preview.sprite_frames.get_frame_texture(sprite_preview.animation, sprite_preview.frame).get_size()
+			preview_background.offset_left -= s.x * 0.5
+			preview_background.offset_right -= s.x * 0.5
+			preview_background.offset_top -= s.y * 0.5
+			preview_background.offset_bottom -= s.y * 0.5
+		# TODO: handle sprite offset too, probably
+	preview_background.color = self.background_color
+	
+	if preview_background.get_parent() != sprite_preview:
+		if preview_background.get_parent() != null:
+			preview_background.get_parent().remove_child(preview_background)
+		sprite_preview.add_child(preview_background)
+	
+	var shape_frame := get_shape_frame()
+	if shape_frame != null:
+		if not is_instance_valid(preview_shape):
+			preview_shape = CollisionShape2D.new()
+			preview_shape.name = "PreviewCollisionShape2D"
+			preview_shape.set_script(SHAPE_PREVIEW_SCRIPT)
+			preview_shape.rectangle_changed.connect(on_preview_shape_rectangle_changed)
+			preview_shape.item_rect_changed.connect(on_preview_shape_rect_changed)
+			self.animated_shape.collision_shape.add_sibling(preview_shape)
+		preview_shape.shape = shape_frame.shape
+		preview_shape.position = shape_frame.position
+		preview_shape.disabled = shape_frame.disabled
+		preview_shape.debug_color = self.animated_shape.collision_shape.debug_color
+	else:
+		if is_instance_valid(preview_shape):
+			preview_shape.queue_free()
+			preview_shape = null
+	
+	if sprite_preview.get_parent() == null:
+		self.animated_shape.animated_sprite.add_sibling(sprite_preview)
+	
+	var selection := EditorInterface.get_selection().get_selected_nodes()
+	var already_selected := not selection.is_empty()
+	if already_selected:
+		already_selected = (selection[0] == preview_shape)
+	if is_instance_valid(preview_shape) and not already_selected:
+		EditorInterface.get_selection().clear()
+		EditorInterface.get_selection().add_node(preview_shape)
+		# Whatever the doc says, the node already IS inspected.  Might change.
+		# Anyway we don't even WANT to inspect this node, and we have to hack
+		# around this unwanted inspection, see _on_sprite_button_toggled().
+		#EditorInterface.edit_node(preview_shape)
+		
+		# This path was created using the infamous Editor Debugger with a tweak.
+		# We are not using the raw index in parent, but index by class in parent
+		# because it will be a little more resilient to changes in the tree.
+		# This is a hack, and may not play nice with third party plugins.
+		# If you know of another way to enable the mouse move mode, plz share!
+		# We need to use the mouse move mode because the selection mode does
+		# not like non-owned nodes, even if they are _already selected_.
+		var path := [  # [ class, index_by_class_in_parent ]
+			["VBoxContainer", 0], ["HSplitContainer", 0],
+			["HSplitContainer", 0], ["HSplitContainer", 0],
+			["VBoxContainer", 0], ["VSplitContainer", 0],
+			["VSplitContainer", 0], ["VBoxContainer", 0],
+			["PanelContainer", 0], ["VBoxContainer", 0],
+			["CanvasItemEditor", 0], ["MarginContainer", 0],
+			["HFlowContainer", 0], ["HBoxContainer", 0],
+			["Button", 1],
+		]
+		var mouse_move_button := get_editor_node_from_path(path) as Button
+		if mouse_move_button != null:
+			mouse_move_button.pressed.emit()
+		else:
+			# Ouch, the hack above broke, as expected.  Best ignore this.
+			# Just make sure you use the Mouse Move Mode when editing the 2D
+			# preview, and not the Select Mode (we can't reposition with it).
+			push_warning("Mouse Move Button of 2D View was not found.")
+
+
+func on_preview_shape_rectangle_changed():
+	update_from_preview_shape()
+
+
+func on_preview_shape_rect_changed():
+	# I wanna know when this starts working.
+	print("Oh, now item_rect_changed signal works.  Used to not.")
+	# Enable this when it works, and remove workaraound?
+	#update_from_preview_shape()
+
+
+func update_from_preview_shape():
+	var shape_frame := get_shape_frame()
+	if shape_frame == null:
+		return
+	if not is_instance_valid(self.preview_shape):
+		return
+	shape_frame.position = self.preview_shape.position
+
+
+## Tool (could be static) to fetch a node from a weird path of [type, index],
+## where the index is only amongst nodes of the specified type,
+## to be more resilient to changes in the tree that will break the path.
+## This path is for the Editor only and starts in the base editor control.
+## Use the (modded) "editor_debug" addon to get the path (copy typed path). F10
+func get_editor_node_from_path(path: Array) -> Node:
+	var node := EditorInterface.get_base_control()
+	for datum in path:
+		var node_class: String = datum[0]
+		var node_index: int = datum[1]
+		var current_index := 0
+		var found := false
+		for child in node.get_children():
+			if child.get_class() != node_class:
+				continue
+			if current_index == node_index:
+				node = child
+				found = true
+				break
+			current_index += 1
+		if not found:
+			return null
+	return node
+
+
+#  ______               _
+# |  ____|             | |
+# | |____   _____ _ __ | |_ ___
+# |  __\ \ / / _ \ '_ \| __/ __|
+# | |___\ V /  __/ | | | |_\__ \
+# |______\_/ \___|_| |_|\__|___/
+#
 
 
 func on_shape_frame_changed():
 	update()
 
 
-func _on_sprite_button_pressed():
-	inspect_shape_frame()
+func _on_sprite_button_toggled(toggled_on: bool):
+	if toggled_on:
+		preview_shape_frame()
+		#inspect_shape_frame()  # nope, the preview has priority somehow
+		#inspect_shape_frame.call_deferred()  # nope too
+		# So, this horrendous await that will create bugs
+		get_tree().create_timer(0.064).timeout.connect(
+			func():
+				inspect_shape_frame()
+		)
+	else:
+		remove_preview_of_shape_frame()
 
 
 func _on_create_button_pressed():
@@ -203,6 +406,10 @@ func _on_create_button_pressed():
 	
 	update()
 	connect_to_shape_frame()
+	inspect_shape_frame()
+
+
+func _on_edit_button_pressed():
 	inspect_shape_frame()
 
 
@@ -244,6 +451,9 @@ func _on_paste_button_pressed():
 		self.undo_redo.add_do_method(
 			self, &"update",
 		)
+		self.undo_redo.add_do_method(
+			self, &"inspect_shape_frame",
+		)
 		self.undo_redo.add_undo_method(
 			self, &"disconnect_from_shape_frame",
 		)
@@ -256,6 +466,9 @@ func _on_paste_button_pressed():
 		)
 		self.undo_redo.add_undo_method(
 			self, &"update",
+		)
+		self.undo_redo.add_undo_method(
+			self, &"inspect_shape_frame",
 		)
 		self.undo_redo.commit_action()
 	else:
@@ -287,6 +500,9 @@ func _on_delete_button_pressed():
 		self.undo_redo.add_do_method(
 			self, &"update",
 		)
+		self.undo_redo.add_do_method(
+			self, &"inspect_shape_frame",
+		)
 		self.undo_redo.add_undo_method(
 			self.animated_shape.shape_frames, &"set_shape_frame",
 			self.animation_name, self.frame_index, shape_frame,
@@ -297,6 +513,9 @@ func _on_delete_button_pressed():
 		self.undo_redo.add_undo_method(
 			self, &"update",
 		)
+		self.undo_redo.add_undo_method(
+			self, &"inspect_shape_frame",
+		)
 		self.undo_redo.commit_action()
 	else:
 		# Same as above, but without the UndoRedo shenanigans
@@ -305,3 +524,4 @@ func _on_delete_button_pressed():
 			self.animation_name, self.frame_index,
 		)
 		update()
+

@@ -26,12 +26,20 @@ func configure(
 func clear():
 	self.animation_names_item_list.deselect_all()
 	self.animation_names_item_list.clear()
+	clear_shape_frames()
 	self.animated_shape = null
+
+
+func clear_shape_frames():
+	for child in self.frames_container.get_children():
+		child.queue_free()
 
 
 func rebuild_gui(
 	animated_shape: AnimatedShape2D,
 ):
+	if self.animated_shape == animated_shape:
+		return
 	clear()
 	self.animated_shape = animated_shape
 	#%BackgroundColorPicker.color = …  # from editor settings ?
@@ -67,9 +75,9 @@ func rebuild_animation_names_item_list(
 
 
 func rebuild_view_of_animation(animation_name: String):
-	for child in self.frames_container.get_children():
-		child.queue_free()
+	clear_shape_frames()
 	
+	var button_group := ButtonGroup.new()
 	var frames_count := self.animated_shape.animated_sprite.sprite_frames.get_frame_count(animation_name)
 	for frame_index in frames_count:
 		var frame_scene := FRAME_SCENE.instantiate() as ShapeFrameEditor
@@ -77,7 +85,7 @@ func rebuild_view_of_animation(animation_name: String):
 		frame_scene.set_undo_redo(self.editor_plugin.get_undo_redo())
 		frame_scene.set_zoom_level(self.zoom_level)
 		frame_scene.set_background_color(self.background_color)
-		frame_scene.build()
+		frame_scene.build(button_group)
 		frames_container.add_child(frame_scene)
 
 

@@ -37,6 +37,12 @@ func on_inspector_edited_object_changed():
 	var edited_object := get_editor_interface().get_inspector().get_edited_object()
 	if edited_object is ShapeFrame2D:
 		return
+	if edited_object is Node and (edited_object as Node).owner == null:
+		return  # we're editing the previews' shape
+	if edited_object is Shape2D:
+		return  # same
+	if edited_object == null:
+		return  # same
 	var animated_shape: AnimatedShape2D = null
 	if edited_object is AnimatedShape2D:
 		animated_shape = edited_object as AnimatedShape2D
@@ -47,6 +53,7 @@ func update_bottom_panel(animated_shape: AnimatedShape2D):
 	if animated_shape == null:
 		self.bottom_panel_button.button_pressed = false
 		self.bottom_panel_button.visible = false
+		self.bottom_panel_control.clear()
 		return
 	
 	self.bottom_panel_button.visible = true
