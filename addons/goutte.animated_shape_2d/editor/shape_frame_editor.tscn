@@ -1,7 +1,6 @@
-[gd_scene load_steps=9 format=3 uid="uid://c6fdijn2r2lcs"]
+[gd_scene load_steps=8 format=3 uid="uid://c6fdijn2r2lcs"]
 
 [ext_resource type="Script" path="res://addons/goutte.animated_shape_2d/editor/shape_frame_editor.gd" id="1_pmp4u"]
-[ext_resource type="Texture2D" uid="uid://bas71pf106lg3" path="res://sprites/characters/noir/front/idle/noir_character_idle2.png" id="2_0plky"]
 [ext_resource type="Texture2D" uid="uid://hsf5o8ys0vo3" path="res://addons/goutte.animated_shape_2d/editor/icons/remove.png" id="3_bm3kb"]
 [ext_resource type="Texture2D" uid="uid://cbgoa2ilmautt" path="res://addons/goutte.animated_shape_2d/editor/icons/new.png" id="3_j1q7m"]
 [ext_resource type="Texture2D" uid="uid://085a76nwyjqf" path="res://addons/goutte.animated_shape_2d/editor/icons/copy.png" id="4_tt4qt"]
@@ -68,7 +67,6 @@ layout_mode = 2
 auto_translate = false
 localize_numeral_system = false
 mouse_filter = 2
-texture = ExtResource("2_0plky")
 stretch_mode = 5
 
 [node name="ZoomAdjuster" type="Node2D" parent="VBoxContainer/MarginContainer/SpriteFrameTexture"]

@@ -40,11 +40,16 @@ func rebuild_gui(
 ):
 	if self.animated_shape == animated_shape:
 		return
+	
 	clear()
 	self.animated_shape = animated_shape
+	
 	#%BackgroundColorPicker.color = …  # from editor settings ?
 	self.background_color = %BackgroundColorPicker.color
-	var animation_name := animated_shape.animated_sprite.animation
+	
+	var animation_name := &"default"
+	if is_instance_valid(animated_shape.animated_sprite):
+		animation_name = animated_shape.animated_sprite.animation
 	rebuild_animation_names_item_list(animated_shape, animation_name)
 
 
