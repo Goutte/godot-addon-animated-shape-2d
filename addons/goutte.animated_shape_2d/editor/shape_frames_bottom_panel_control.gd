@@ -36,21 +36,55 @@ func clear_shape_frames():
 
 
 func rebuild_gui(
-	animated_shape: AnimatedShape2D,
+	for_animated_shape: AnimatedShape2D,
+	force := false,
 ):
-	if self.animated_shape == animated_shape:
+	if (self.animated_shape == for_animated_shape) and not force:
 		return
 	
 	clear()
-	self.animated_shape = animated_shape
+	self.animated_shape = for_animated_shape
 	
 	#%BackgroundColorPicker.color = …  # from editor settings ?
 	self.background_color = %BackgroundColorPicker.color
 	
+	var missing_requirements := false
+	if not is_instance_valid(self.animated_shape.animated_sprite):
+		var label := Label.new()
+		label.text = tr("Please assign an input animated sprite to this AnimatedShape2D.")
+		self.frames_container.add_child(label)
+		missing_requirements = true
+	if not is_instance_valid(self.animated_shape.collision_shape):
+		var label := Label.new()
+		label.text = tr("Please assign a target collision shape to this AnimatedShape2D.")
+		self.frames_container.add_child(label)
+		missing_requirements = true
+	if not is_instance_valid(self.animated_shape.shape_frames):
+		var label := Label.new()
+		label.text = tr("Please create or load shape frames data for this AnimatedShape2D.")
+		self.frames_container.add_child(label)
+		missing_requirements = true
+	
+	var inspector := EditorInterface.get_inspector()
+	if inspector.property_edited.is_connected(on_change_reload):
+		inspector.property_edited.disconnect(on_change_reload)
+	if missing_requirements:
+		inspector.property_edited.connect(on_change_reload)
+		return
+	
 	var animation_name := &"default"
-	if is_instance_valid(animated_shape.animated_sprite):
-		animation_name = animated_shape.animated_sprite.animation
-	rebuild_animation_names_item_list(animated_shape, animation_name)
+	if is_instance_valid(self.animated_shape.animated_sprite):
+		animation_name = self.animated_shape.animated_sprite.animation
+	rebuild_animation_names_item_list(self.animated_shape, animation_name)
+
+
+func on_change_reload(_property: String):
+	var inspector := EditorInterface.get_inspector()
+	if not (inspector.get_edited_object() is AnimatedShape2D):
+		return
+	if inspector.property_edited.is_connected(on_change_reload):
+		inspector.property_edited.disconnect(on_change_reload)
+	rebuild_gui(self.animated_shape, true)
 
 
 func rebuild_animation_names_item_list(
