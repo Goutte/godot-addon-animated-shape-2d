@@ -1,11 +1,11 @@
 @tool
 extends Resource
+class_name ShapeFrame2D
+
 ## Data object for a single shape frame.
 ## Basically a configurator for a CollisionShape2D.
 ## Each frame of each animation of an AnimatedSprite2D will be matched to one
 ## of these, in a Dictionary in ShapeFrames2D.
-class_name ShapeFrame2D
-
 
 ## Position of the collision shape in its parent.
 @export var position := Vector2.ZERO:

@@ -1,9 +1,10 @@
 @tool
 extends Resource
+class_name ShapeFrames2D
+
 ## Resource holding the configuration of a CollisionShape2D,
 ## for each frame of each animation of a SpriteFrames.
 ## This is basically a mapping of ShapeFrame2D for each (animation name, frame).
-class_name ShapeFrames2D
 
 
 ## This helps avoiding infinite loops in case you pass INF as frame index.

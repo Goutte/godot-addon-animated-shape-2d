@@ -1,9 +1,11 @@
-[gd_scene load_steps=5 format=3 uid="uid://fh5kcvadxlh3"]
+[gd_scene load_steps=7 format=3 uid="uid://fh5kcvadxlh3"]
 
 [ext_resource type="Script" path="res://addons/goutte.animated_shape_2d/editor/shape_frames_bottom_panel_control.gd" id="1_5xwm0"]
 [ext_resource type="Texture2D" uid="uid://cwgak166wa6hw" path="res://addons/goutte.animated_shape_2d/editor/icons/zoom_less.png" id="2_rtykk"]
 [ext_resource type="Texture2D" uid="uid://b64sqrouwimqs" path="res://addons/goutte.animated_shape_2d/editor/icons/zoom_more.png" id="3_2217o"]
 [ext_resource type="Texture2D" uid="uid://2vmlyocy0aeu" path="res://addons/goutte.animated_shape_2d/editor/icons/zoom_reset.png" id="3_h377a"]
+[ext_resource type="Texture2D" uid="uid://btv6bx8bipqrm" path="res://addons/goutte.animated_shape_2d/editor/icons/shift_left.png" id="5_jj5t1"]
+[ext_resource type="Texture2D" uid="uid://q30fj4bowepc" path="res://addons/goutte.animated_shape_2d/editor/icons/shift_right.png" id="6_66ia2"]
 
 [node name="ShapeFramesBottomPanelControl" type="Control"]
 layout_mode = 3
@@ -58,7 +60,7 @@ mouse_default_cursor_shape = 2
 icon = ExtResource("3_2217o")
 flat = true
 
-[node name="VSeparator" type="VSeparator" parent="HSplitContainer/MarginContainer/ActionContainer"]
+[node name="VSeparator1" type="VSeparator" parent="HSplitContainer/MarginContainer/ActionContainer"]
 layout_mode = 2
 
 [node name="BackgroundColorPicker" type="ColorPickerButton" parent="HSplitContainer/MarginContainer/ActionContainer"]
@@ -69,6 +71,31 @@ tooltip_text = "Choose a color for the background of the previews."
 focus_mode = 0
 mouse_default_cursor_shape = 2
 color = Color(0.282353, 0.282353, 0.282353, 1)
+
+[node name="VSeparator2" type="VSeparator" parent="HSplitContainer/MarginContainer/ActionContainer"]
+layout_mode = 2
+
+[node name="ShiftLeftButton" type="Button" parent="HSplitContainer/MarginContainer/ActionContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Shift the selected shape frame one slot to the left, pushing adjacent shape frames if necessary.
+If there is no free room to shift to, the shift is cancelled, because
+we don't want to destroy any shape frame data by shifting over it."
+mouse_default_cursor_shape = 2
+disabled = true
+icon = ExtResource("5_jj5t1")
+flat = true
+
+[node name="ShiftRightButton" type="Button" parent="HSplitContainer/MarginContainer/ActionContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Shift the selected shape frame one slot to the right, pushing adjacent shape frames if necessary.
+If there is no free room to shift to, the shift is cancelled, because
+we don't want to destroy any shape frame data by shifting over it."
+mouse_default_cursor_shape = 2
+disabled = true
+icon = ExtResource("6_66ia2")
+flat = true
 
 [node name="ScrollContainer" type="ScrollContainer" parent="HSplitContainer/MarginContainer"]
 layout_mode = 2
@@ -87,3 +114,5 @@ size_flags_vertical = 3
 [connection signal="pressed" from="HSplitContainer/MarginContainer/ActionContainer/ZoomResetButton" to="." method="_on_zoom_reset_button_pressed"]
 [connection signal="pressed" from="HSplitContainer/MarginContainer/ActionContainer/ZoomMoreButton" to="." method="_on_zoom_more_button_pressed"]
 [connection signal="color_changed" from="HSplitContainer/MarginContainer/ActionContainer/BackgroundColorPicker" to="." method="_on_background_color_picker_color_changed"]
+[connection signal="pressed" from="HSplitContainer/MarginContainer/ActionContainer/ShiftLeftButton" to="." method="_on_shift_left_button_pressed"]
+[connection signal="pressed" from="HSplitContainer/MarginContainer/ActionContainer/ShiftRightButton" to="." method="_on_shift_right_button_pressed"]

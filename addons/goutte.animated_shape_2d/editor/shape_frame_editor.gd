@@ -1,8 +1,9 @@
 @tool
 extends Control
+class_name ShapeFrameEditor
+
 ## Editor GUI for a single ShapeFrame2D.
 ## Shows a preview of the sprite and the shape, as well as action buttons.
-class_name ShapeFrameEditor
 
 
 const SHAPE_PREVIEW_SCRIPT := preload("./shape_preview.gd")
@@ -22,6 +23,10 @@ var zoom_level := 1.0
 var background_color := Color.WEB_GRAY
 
 var undo_redo: EditorUndoRedoManager
+
+
+signal frame_selected
+signal frame_deselected
 
 
 ## Mandatory dependency injection, since it's best to leave _init() alone.
@@ -55,6 +60,8 @@ func _enter_tree():
 func _exit_tree():
 	disconnect_from_shape_frame()
 	remove_preview_of_shape_frame()
+	if is_selected():
+		frame_deselected.emit()
 
 
 func build(button_group: ButtonGroup):
@@ -73,6 +80,19 @@ func get_shape_frame() -> ShapeFrame2D:
 	)
 
 
+func set_shape_frame(value: ShapeFrame2D):
+	if self.animated_shape == null:
+		return
+	if self.animated_shape.shape_frames == null:
+		return
+	disconnect_from_shape_frame()
+	self.animated_shape.shape_frames.set_shape_frame(
+		self.animation_name, self.frame_index, value,
+	)
+	connect_to_shape_frame()
+	update()
+
+
 ## Connect to the edited Resource, in order to update the GUI in real time.
 func connect_to_shape_frame():
 	var shape_frame := get_shape_frame()
@@ -86,6 +106,14 @@ func disconnect_from_shape_frame():
 	if shape_frame != null:
 		if shape_frame.changed.is_connected(on_shape_frame_changed):
 			shape_frame.changed.disconnect(on_shape_frame_changed)
+
+
+func is_selected() -> bool:
+	return %SpriteButton.button_pressed
+
+
+func select():
+	%SpriteButton.button_pressed = true
 
 
 ## The crux of the matter ; update the scene according to the data.
@@ -377,15 +405,17 @@ func on_shape_frame_changed():
 
 func _on_sprite_button_toggled(toggled_on: bool):
 	if toggled_on:
+		frame_selected.emit()
 		preview_shape_frame()
 		#inspect_shape_frame()  # nope, the preview has priority somehow
 		#inspect_shape_frame.call_deferred()  # nope too
-		# So, this horrendous await that will create bugs
+		# So, we use this horrendous await that will create bugs:
 		get_tree().create_timer(0.064).timeout.connect(
 			func():
 				inspect_shape_frame()
 		)
 	else:
+		frame_deselected.emit()
 		remove_preview_of_shape_frame()
 
 
@@ -399,7 +429,10 @@ func _on_create_button_pressed():
 	shape_frame = ShapeFrame2D.new()
 	shape_frame.disabled = self.animated_shape.collision_shape.disabled
 	shape_frame.position = self.animated_shape.collision_shape.position
-	shape_frame.shape = self.animated_shape.collision_shape.shape.duplicate(true)
+	if self.animated_shape.collision_shape.shape:
+		shape_frame.shape = self.animated_shape.collision_shape.shape.duplicate(true)
+	else:
+		shape_frame.shape = RectangleShape2D.new()
 	self.animated_shape.shape_frames.set_shape_frame(
 		self.animation_name, self.frame_index, shape_frame,
 	)
