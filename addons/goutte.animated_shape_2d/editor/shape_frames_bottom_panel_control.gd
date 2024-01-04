@@ -1,6 +1,10 @@
 @tool
 extends Control
 
+## Bottom panel for the Editor, shown along with Output, Debugger, etc.
+## Dedicated to editing a single AnimatedShape2D.
+## Will show a list of animation names, and frames for each animation.
+
 const FRAME_SCENE := preload("./shape_frame_editor.tscn")
 
 @onready var animation_names_item_list: ItemList = %AnimationNamesItemList
@@ -19,6 +23,14 @@ var zoom_level := 1.0: set = set_zoom_level
 ## Customizable background color of previews.
 var background_color := Color.WEB_GRAY
 
+## Button Group for the various frames, so that only one is selected at a time.
+## We assign this procedurally because assigning it in the scene did not work.
+var frames_button_group: ButtonGroup
+
+## Array of ShapeFrameEditor currently shown, for the selected animation.
+## These are the children of frames_container, except when config is missing.
+var frames_list := Array()  # of ShapeFrameEditor
+
 
 signal frame_selected(animation_name: String, frame_index: int)
 signal frame_deselected(animation_name: String, frame_index: int)
@@ -33,8 +45,8 @@ func configure(
 func clear():
 	self.animation_names_item_list.deselect_all()
 	self.animation_names_item_list.clear()
-	clear_shape_frames()
 	self.animated_shape = null
+	clear_shape_frames()
 
 
 func clear_shape_frames():
@@ -112,10 +124,6 @@ func rebuild_animation_names_item_list(
 	
 	self.animation_names_item_list.select(selected_index)
 	self.animation_names_item_list.item_selected.emit(selected_index)
-
-
-var frames_button_group: ButtonGroup
-var frames_list := Array()  # of ShapeFrameEditor
 
 
 func rebuild_view_of_animation(animation_name: String):

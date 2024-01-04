@@ -7,6 +7,7 @@ class_name ShapeFrame2D
 ## Each frame of each animation of an AnimatedSprite2D will be matched to one
 ## of these, in a Dictionary in ShapeFrames2D.
 
+
 ## Position of the collision shape in its parent.
 @export var position := Vector2.ZERO:
 	set(value):

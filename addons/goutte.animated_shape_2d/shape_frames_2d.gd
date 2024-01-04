@@ -66,16 +66,6 @@ func remove_shape_frame(animation_name: StringName, frame: int):
 		animation_data[frame] = null
 
 
-## Returns the shape for the specified animation name and frame.
-## This should return null if there is no Shape2D for the animation and frame.
-## Legacy (not performant, since we usually fetch the shape_frame before this).
-#func get_shape(animation_name: StringName, frame: int) -> Shape2D:
-	#var frame_data := get_shape_frame(animation_name, frame)
-	#if null != frame_data:
-		#return frame_data.get_shape()
-	#return null
-
-
 # Example of a tentative procedural API to make this.
 # Prefer using the Editor for now.
 #static func make_dummy() -> ShapeFrames2D:
