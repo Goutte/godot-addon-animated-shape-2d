@@ -1,4 +1,5 @@
 @tool
+@icon("./animated_shape_2d.svg")
 extends Node
 class_name AnimatedShape2D
 
