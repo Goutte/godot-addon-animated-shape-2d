@@ -3,14 +3,6 @@
 extends Node
 class_name AnimatedShape2D
 
-#                 _                 _           _  _____ _
-#     /\         (_)               | |         | |/ ____| |
-#    /  \   _ __  _ _ __ ___   __ _| |_ ___  __| | (___ | |__   __ _ _ __   ___
-#   / /\ \ | '_ \| | '_ ` _ \ / _` | __/ _ \/ _` |\___ \| '_ \ / _` | '_ \ / _ \
-#  / ____ \| | | | | | | | | | (_| | ||  __/ (_| |____) | | | | (_| | |_) |  __/
-# /_/    \_\_| |_|_|_| |_| |_|\__,_|\__\___|\__,_|_____/|_| |_|\__,_| .__/ \___|
-#                                                                   | |
-# v0.1.3-20231231                                                   |_|
 ## Animates a CollisionShape2D for each frame of an AnimatedSprite2D.
 ## You can put this pretty much anywhere you want in your scene.
 
@@ -49,6 +41,19 @@ class_name AnimatedShape2D
 @export var handle_flip_h := true
 
 
+enum SHAPE_UPDATE_MODE {
+	## Update the existing shape resource properties in the CollisionShape2D,
+	## but only if shape types are compatible.
+	UPDATE,
+	## Always replace the existing shape resource in the CollisionShape2D.
+	## This may trigger additional [code]entered[/code] signals.
+	REPLACE,
+}
+
+## How the Shape2D resource is updated between frames.
+@export var update_shape_mode := SHAPE_UPDATE_MODE.UPDATE
+
+
 var fallback_shape: Shape2D
 var fallback_position: Vector2
 var fallback_disabled: bool
@@ -76,12 +81,16 @@ func setup():
 	if self.collision_shape == null:
 		return
 	self.fallback_shape = self.collision_shape.shape
+	if self.update_shape_mode == SHAPE_UPDATE_MODE.UPDATE:
+		# We're going to update the original collision shape's shape, so we copy
+		self.fallback_shape = self.collision_shape.shape.duplicate(true)
 	self.fallback_position = self.collision_shape.position
 	self.fallback_disabled = self.collision_shape.disabled
 	self.collision_shape_parent = self.collision_shape.get_parent()
 	if self.collision_shape_parent != null:
 		self.initial_scale = self.collision_shape_parent.scale
 	
+	self.animated_sprite.animation_changed.connect(update_shape)
 	self.animated_sprite.frame_changed.connect(update_shape)
 
 
@@ -106,7 +115,7 @@ func update_shape():
 		position = self.fallback_position
 		disabled = self.fallback_disabled
 	
-	self.collision_shape.shape = shape
+	update_collision_shape_shape(shape)
 	self.collision_shape.position = position
 	self.collision_shape.disabled = disabled
 	if self.handle_flip_h and is_collision_shape_parent_flippable():
@@ -115,6 +124,68 @@ func update_shape():
 			self.collision_shape_parent.scale.x = -self.initial_scale.x
 		else:
 			self.collision_shape_parent.scale.x = self.initial_scale.x
+
+
+func update_collision_shape_shape(new_shape: Shape2D):
+	if new_shape == self.collision_shape.shape:
+		return
+	
+	if (
+		self.update_shape_mode == SHAPE_UPDATE_MODE.UPDATE
+		and
+		self.collision_shape.shape != null
+		and
+		new_shape != null
+	):
+		if (
+			(self.collision_shape.shape is RectangleShape2D)
+			and
+			(new_shape is RectangleShape2D)
+		):
+			self.collision_shape.shape.size = new_shape.size
+			return
+		
+		if (
+			(self.collision_shape.shape is CircleShape2D)
+			and
+			(new_shape is CircleShape2D)
+		):
+			self.collision_shape.shape.radius = new_shape.radius
+			return
+		
+		if (
+			(self.collision_shape.shape is CapsuleShape2D)
+			and
+			(new_shape is CapsuleShape2D)
+		):
+			self.collision_shape.shape.height = new_shape.height
+			self.collision_shape.shape.radius = new_shape.radius
+			return
+		
+		if (
+			(self.collision_shape.shape is SegmentShape2D)
+			and
+			(new_shape is SegmentShape2D)
+		):
+			self.collision_shape.shape.a = new_shape.a
+			self.collision_shape.shape.b = new_shape.b
+			return
+		
+		if (
+			(self.collision_shape.shape is WorldBoundaryShape2D)
+			and
+			(new_shape is WorldBoundaryShape2D)
+		):
+			self.collision_shape.shape.distance = new_shape.distance
+			self.collision_shape.shape.normal = new_shape.normal
+			return
+		
+		# If the update cannot be done, we want to duplicate the shape
+		# because we might update it later on.
+		self.collision_shape.shape = new_shape.duplicate(true)
+		return
+	
+	self.collision_shape.shape = new_shape
 
 
 ## We don't want to flip PhysicsBodies because it creates odd behaviors.
