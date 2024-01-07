@@ -6,7 +6,7 @@ Animated Shape 2D Addon for Godot
 [![FeedStarvingDev](https://img.shields.io/liberapay/patrons/Goutte.svg?style=for-the-badge&logo=liberapay)](https://liberapay.com/Goutte/)
 
 
-A [Godot](https://godotengine.org/) `4.x` addon that adds an `AnimatedShape2D` that can provide a custom shape for each frame of each animation of an `AnimatedSprite2D`.
+A [Godot](https://godotengine.org/) `^4.2` addon that adds an `AnimatedShape2D` node that can customize a `CollisionShape2D` for each frame of each animation of an `AnimatedSprite2D`.
 
 It is useful to make custom hitboxes, hurtboxes, and hardboxes for each pose of your character,
 if you animated it using `AnimatedSprite2D`.
@@ -20,7 +20,9 @@ Features
 - customize a shape for each frame of your animations
 - configurable fallbacks
 - editor GUI, updated in real time
+- copy & pasting, with either shallow of deep copies
 - supports undo & redo where it matters
+- dogfed
 - extensible
 
 
@@ -56,14 +58,6 @@ It listens to the `AnimatedSprite2D` frame changes, and updates its target `Coll
 
 _That's it._
 
-
-Roadmap
--------
-
-> I would like these, but I don't plan on doing them myself for now.
-> Perhaps I will, perhaps I won't.  You are welcome to hack around.
-
-- [ ] Resize/Position the shape in the Editor by drag and drop, just like in the main view.
 
 
 -----
