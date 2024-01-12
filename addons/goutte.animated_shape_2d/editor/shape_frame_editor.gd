@@ -138,10 +138,13 @@ func update():
 	# II. Origin (0, 0) of the parent of the collision shape,
 	# relative to the sprite, to help positioning our collision shape
 	# at the right spot relative to the sprite in this preview.
+	var collision_shape_parent_transform := Transform2D()
+	if self.animated_shape.collision_shape.get_parent() is Node2D:
+		collision_shape_parent_transform = self.animated_shape.collision_shape.get_parent().global_transform
 	%Origin.transform = (
 		self.animated_shape.animated_sprite.global_transform.affine_inverse()
 		*
-		self.animated_shape.collision_shape.get_parent().global_transform
+		collision_shape_parent_transform
 	)
 	if self.animated_shape.animated_sprite.centered:
 		%Origin.position += (
