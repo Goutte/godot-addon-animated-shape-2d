@@ -6,4 +6,4 @@
 /LICENSE                                 export-ignore
 /.gitignore                              export-ignore
 /.gitattributes                          export-ignore
-/addons/goutte.animated-shape-2d/extras  export-ignore
+/addons/goutte.animated_shape_2d/extras  export-ignore
