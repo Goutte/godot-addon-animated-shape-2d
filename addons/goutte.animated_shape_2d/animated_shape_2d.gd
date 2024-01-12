@@ -4,8 +4,19 @@ extends Node
 class_name AnimatedShape2D
 
 ## Animates a CollisionShape2D for each frame of an AnimatedSprite2D.
-## You can put this pretty much anywhere you want in your scene.
 
+# Usage:
+# 1. Add this node anywhere in your scene
+# 2. Target an input AnimatedSprite2D
+# 3. Target an output CollisionShape2D
+# 4. Load or Create a ShapeFrames2D (it's our database)
+# 
+# Notes:
+# - You can put this pretty much anywhere you want in your scene.
+# - This _could_ be a script on a CollisionShape2D, but this way your are free
+#   to have your own script on your collision shape if you want to.
+# - This is quite experimental ; contributions are welcome.
+#   https://github.com/Goutte/godot-addon-animated-shape-2d
 
 ## Animated sprite we're going to watch to figure out which shape we want.
 ## We're reading the animation name and frame from it.
@@ -40,17 +51,27 @@ class_name AnimatedShape2D
 ## shapes that are children of Area2D, to avoid weird behaviors with physics.
 @export var handle_flip_h := true
 
+## Maximum amount of shape size and position change per physics frame.
+## Only used in the [code]INTERPOLATE[/code] mode.
+@export var interpolation_step := 3.0
+
 
 enum SHAPE_UPDATE_MODE {
 	## Update the existing shape resource properties in the CollisionShape2D,
 	## but only if shape types are compatible.
 	UPDATE,
+	## Works like [code]UPDATE[/code], but interpolates values instead of setting them.
+	## This helps when sudden, big changes in a collision shape make the physics
+	## engine glitch and your character starts clipping through the environment.
+	## Use with [code]interpolation_step[/code].
+	INTERPOLATE,
 	## Always replace the existing shape resource in the CollisionShape2D.
 	## This may trigger additional [code]entered[/code] signals.
 	REPLACE,
 }
 
-## How the Shape2D resource is updated between frames.
+## How the Shape2D resource of the CollisionShape2D is updated between frames.
+## Weird things will happen if you change this at runtime.
 @export var update_shape_mode := SHAPE_UPDATE_MODE.UPDATE
 
 
@@ -60,10 +81,24 @@ var fallback_disabled: bool
 var initial_scale: Vector2
 var collision_shape_parent: Node2D
 
+var is_tweening_collision_shape_position := false
+var target_collision_shape_position := Vector2.ZERO
+var is_tweening_collision_shape_shape := false
+var target_collision_shape_shape: Shape2D
+
 
 func _ready():
 	if not Engine.is_editor_hint():
 		setup()
+	else:
+		set_physics_process(false)
+
+
+func _physics_process(_delta: float):
+	if self.is_tweening_collision_shape_position:
+		tween_collision_shape_position()
+	if self.is_tweening_collision_shape_shape:
+		tween_collision_shape_shape()
 
 
 func _get_configuration_warnings() -> PackedStringArray:
@@ -80,9 +115,9 @@ func _get_configuration_warnings() -> PackedStringArray:
 func setup():
 	if self.collision_shape == null:
 		return
-	self.fallback_shape = self.collision_shape.shape
-	if self.update_shape_mode == SHAPE_UPDATE_MODE.UPDATE:
-		# We're going to update the original collision shape's shape, so we copy
+	
+	# We might update the original collision shape's shape, so we duplicate
+	if self.collision_shape.shape:
 		self.fallback_shape = self.collision_shape.shape.duplicate(true)
 	self.fallback_position = self.collision_shape.position
 	self.fallback_disabled = self.collision_shape.disabled
@@ -92,6 +127,8 @@ func setup():
 	
 	self.animated_sprite.animation_changed.connect(update_shape)
 	self.animated_sprite.frame_changed.connect(update_shape)
+	
+	set_physics_process(self.update_shape_mode == SHAPE_UPDATE_MODE.INTERPOLATE)
 
 
 func update_shape():
@@ -116,8 +153,9 @@ func update_shape():
 		disabled = self.fallback_disabled
 	
 	update_collision_shape_shape(shape)
-	self.collision_shape.position = position
+	update_collision_shape_position(position)
 	self.collision_shape.disabled = disabled
+	
 	if self.handle_flip_h and is_collision_shape_parent_flippable():
 		# Improvement idea: flip the CollisionBody2D itself and mirror its x pos
 		if self.animated_sprite.flip_h:
@@ -126,9 +164,34 @@ func update_shape():
 			self.collision_shape_parent.scale.x = self.initial_scale.x
 
 
+func update_collision_shape_position(new_position: Vector2):
+	if new_position == self.collision_shape.position:
+		return
+	
+	if self.update_shape_mode == SHAPE_UPDATE_MODE.INTERPOLATE:
+		self.is_tweening_collision_shape_position = true
+		self.target_collision_shape_position = new_position
+	else:
+		self.collision_shape.position = new_position
+
+
 func update_collision_shape_shape(new_shape: Shape2D):
 	if new_shape == self.collision_shape.shape:
 		return
+	
+	if (
+		self.update_shape_mode == SHAPE_UPDATE_MODE.INTERPOLATE
+		and
+		self.collision_shape.shape != null
+		and
+		new_shape != null
+	):
+		if (
+			(self.collision_shape.shape.get_class() == new_shape.get_class())
+		):
+			self.is_tweening_collision_shape_shape = true
+			self.target_collision_shape_shape = new_shape
+			return
 	
 	if (
 		self.update_shape_mode == SHAPE_UPDATE_MODE.UPDATE
@@ -180,12 +243,169 @@ func update_collision_shape_shape(new_shape: Shape2D):
 			self.collision_shape.shape.normal = new_shape.normal
 			return
 		
-		# If the update cannot be done, we want to duplicate the shape
+		# If the update cannot be done, we want a duplicate of the shape
 		# because we might update it later on.
 		self.collision_shape.shape = new_shape.duplicate(true)
 		return
 	
+	# Or perhaps just simply REPLACE the shape.
+	# This triggers (possibly unwanted) extra area_entered signals.
 	self.collision_shape.shape = new_shape
+
+
+# Make the shape properties go towards their target, but not by more than
+# the configured interpolation step, to keep things smooth.
+# This method is insanely verbose, but not very complicated.
+# I did not want to use reflection for shorter code but worse perfs.
+func tween_collision_shape_shape():
+	if not self.is_tweening_collision_shape_shape:
+		return
+	
+	if (
+		self.collision_shape.shape == null
+		or
+		self.target_collision_shape_shape == null
+	):
+		return
+	
+	if (
+		(self.collision_shape.shape is RectangleShape2D)
+		and
+		(self.target_collision_shape_shape is RectangleShape2D)
+	):
+		self.collision_shape.shape.size.x += clampf(
+			self.target_collision_shape_shape.size.x
+			-
+			self.collision_shape.shape.size.x,
+			-self.interpolation_step,
+			self.interpolation_step,
+		)
+		self.collision_shape.shape.size.y += clampf(
+			self.target_collision_shape_shape.size.y
+			-
+			self.collision_shape.shape.size.y,
+			-self.interpolation_step,
+			self.interpolation_step,
+		)
+		
+		if self.collision_shape.shape.size == self.target_collision_shape_shape.size:
+			self.is_tweening_collision_shape_shape = false
+		
+		return
+	
+	if (
+		(self.collision_shape.shape is CircleShape2D)
+		and
+		(self.target_collision_shape_shape is CircleShape2D)
+	):
+		self.collision_shape.shape.radius += clampf(
+			self.target_collision_shape_shape.radius
+			-
+			self.collision_shape.shape.radius,
+			-self.interpolation_step,
+			self.interpolation_step,
+		)
+		
+		if self.collision_shape.shape.radius == target_collision_shape_shape.radius:
+			self.is_tweening_collision_shape_shape = false
+		
+		return
+	
+	if (
+		(self.collision_shape.shape is CapsuleShape2D)
+		and
+		(self.target_collision_shape_shape is CapsuleShape2D)
+	):
+		self.collision_shape.shape.height += clampf(
+			self.target_collision_shape_shape.height
+			-
+			self.collision_shape.shape.height,
+			-self.interpolation_step,
+			self.interpolation_step,
+		)
+		self.collision_shape.shape.radius += clampf(
+			self.target_collision_shape_shape.radius
+			-
+			self.collision_shape.shape.radius,
+			-self.interpolation_step,
+			self.interpolation_step,
+		)
+		
+		if (
+			self.collision_shape.shape.radius == target_collision_shape_shape.radius
+			and
+			self.collision_shape.shape.height == target_collision_shape_shape.height
+		):
+			self.is_tweening_collision_shape_shape = false
+		
+		return
+	
+	if (
+		(self.collision_shape.shape is SegmentShape2D)
+		and
+		(self.target_collision_shape_shape is SegmentShape2D)
+	):
+		self.collision_shape.shape.a.x += clampf(
+			self.target_collision_shape_shape.a.x
+			-
+			self.collision_shape.shape.a.x,
+			-self.interpolation_step,
+			self.interpolation_step,
+		)
+		self.collision_shape.shape.a.y += clampf(
+			self.target_collision_shape_shape.a.y
+			-
+			self.collision_shape.shape.a.y,
+			-self.interpolation_step,
+			self.interpolation_step,
+		)
+		self.collision_shape.shape.b.x += clampf(
+			self.target_collision_shape_shape.b.x
+			-
+			self.collision_shape.shape.b.x,
+			-self.interpolation_step,
+			self.interpolation_step,
+		)
+		self.collision_shape.shape.b.y += clampf(
+			self.target_collision_shape_shape.b.y
+			-
+			self.collision_shape.shape.b.y,
+			-self.interpolation_step,
+			self.interpolation_step,
+		)
+		
+		if (
+			self.collision_shape.shape.a == target_collision_shape_shape.a
+			and
+			self.collision_shape.shape.b == target_collision_shape_shape.b
+		):
+			self.is_tweening_collision_shape_shape = false
+		
+		return
+	
+	# If shape types are incompatible or not supported, cancel the interpolation
+	# and simply replace the shape, with a duplicate because we might update it.
+	self.is_tweening_collision_shape_shape = false
+	self.collision_shape.shape = target_collision_shape_shape.duplicate(true)
+
+
+func tween_collision_shape_position():
+	if not self.is_tweening_collision_shape_position:
+		return
+	
+	self.collision_shape.position.x += clampf(
+		self.target_collision_shape_position.x - self.collision_shape.position.x,
+		-self.interpolation_step,
+		self.interpolation_step,
+	)
+	self.collision_shape.position.y += clampf(
+		self.target_collision_shape_position.y - self.collision_shape.position.y,
+		-self.interpolation_step,
+		self.interpolation_step,
+	)
+	
+	if self.collision_shape.position == self.target_collision_shape_position:
+		self.is_tweening_collision_shape_position = false
 
 
 ## We don't want to flip PhysicsBodies because it creates odd behaviors.
