@@ -16,6 +16,7 @@ var bottom_panel_control: Control
 
 
 func _enter_tree():
+	# I. Register the "Animated Shape" bottom panel.
 	self.bottom_panel_control = BOTTOM_PANEL_CONTROL_SCENE.instantiate()
 	self.bottom_panel_control.configure(self)
 	self.bottom_panel_button = add_control_to_bottom_panel(
@@ -23,6 +24,8 @@ func _enter_tree():
 		tr("Animated Shape"),
 	)
 	
+	# II. Show/Hide it depending on what's inspected in the Inspector.
+	#     This could also work using what's selected in the Scene Tree Editor?
 	on_inspector_edited_object_changed()
 	get_editor_interface().get_inspector().edited_object_changed.connect(
 		on_inspector_edited_object_changed,
@@ -31,6 +34,13 @@ func _enter_tree():
 
 func _exit_tree():
 	remove_control_from_bottom_panel(self.bottom_panel_control)
+	
+	if get_editor_interface().get_inspector().edited_object_changed.is_connected(
+		on_inspector_edited_object_changed,
+	):
+		get_editor_interface().get_inspector().edited_object_changed.disconnect(
+			on_inspector_edited_object_changed,
+		)
 
 
 func update_bottom_panel(animated_shape: AnimatedShape2D):
