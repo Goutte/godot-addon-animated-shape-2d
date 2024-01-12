@@ -49,7 +49,7 @@ func on_inspector_edited_object_changed():
 	var edited_object := get_editor_interface().get_inspector().get_edited_object()
 	if edited_object is ShapeFrame2D:
 		return
-	if edited_object is Node and (edited_object as Node).owner == null:
+	if edited_object is CollisionShape2D and (edited_object as CollisionShape2D).owner == null:
 		return  # we're editing the previews' shape
 	if edited_object is Shape2D:
 		return  # same
