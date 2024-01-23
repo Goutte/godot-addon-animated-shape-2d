@@ -13,11 +13,14 @@ if you animated it using `AnimatedSprite2D`.
 
 It comes with an Editor GUI to preview your shapes, in the fashion of the `SpriteFrames` bottom panel.
 
+You can also use it to "tag" specific animation frames with custom metadata.
+
 
 Features
 --------
 
 - customize a shape for each frame of your animations
+- store metadata for each frame of your animations
 - configurable fallbacks
 - editor GUI, updated in real time
 - copy & pasting, with either shallow of deep copies
@@ -29,7 +32,7 @@ Features
 Install
 -------
 
-The installation is as usual, through the Assets Library.
+The installation is as usual, through the `Assets Library` within Godot, look for [_AnimatedShape2D_](https://godotengine.org/asset-library/asset/2484).
 You can also simply copy the files of this project into yours, it should work.
 
 Then, enable the plugin in `Scene > Project Settings > Plugins`.
@@ -54,7 +57,7 @@ How it Works
 
 `AnimatedShape2D` stores enough data in a `ShapeFrames2D` resource to fully configure a `CollisionShape2D` for each frame of each animation of an `AnimatedSprite2D`.
 
-It listens to the `AnimatedSprite2D` frame changes, and updates its target `CollisionShape2D` accordingly.
+It listens to the `AnimatedSprite2D` frame|animation changes, and updates its target `CollisionShape2D` accordingly.
 
 _That's it._
 
