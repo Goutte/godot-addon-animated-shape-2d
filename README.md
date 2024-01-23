@@ -28,10 +28,10 @@ Features
 Install
 -------
 
-The installation is as usual, through the Assets Library.
+The installation is as usual, through the `Assets Library` within Godot, look for [_AnimatedShape2D_](https://godotengine.org/asset-library/asset/2484).
 You can also simply copy the files of this project into yours, it should work.
 
-Then, enable the plugin in `Scene > Project Settings > Plugins`.
+Then, **enable the plugin** in `Scene > Project Settings > Plugins`.
 
 
 Usage
