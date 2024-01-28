@@ -2,8 +2,10 @@
 @icon("./animated_shape_2d.svg")
 extends Node
 class_name AnimatedShape2D
+#class_name AnimatedSprite2DCollisions
+#class_name CollisionShape2DFramer
 
-## Animates a CollisionShape2D for each frame of an AnimatedSprite2D.
+## Customizes a CollisionShape2D for each frame of an AnimatedSprite2D.
 
 # Usage:
 # 1. Add this node anywhere in your scene
@@ -90,6 +92,7 @@ var target_collision_shape_shape: Shape2D
 func _ready():
 	if not Engine.is_editor_hint():
 		setup()
+		update_shape()
 	else:
 		set_physics_process(false)
 
@@ -131,10 +134,14 @@ func setup():
 	set_physics_process(self.update_shape_mode == SHAPE_UPDATE_MODE.INTERPOLATE)
 
 
-func update_shape():
+func get_current_shape_frame() -> ShapeFrame2D:
 	var animation_name := self.animated_sprite.get_animation()
 	var frame := self.animated_sprite.get_frame()
-	var shape_frame := self.shape_frames.get_shape_frame(animation_name, frame)
+	return self.shape_frames.get_shape_frame(animation_name, frame)
+
+
+func update_shape():
+	var shape_frame := get_current_shape_frame()
 	
 	var shape: Shape2D = null
 	if shape_frame != null:
@@ -154,7 +161,8 @@ func update_shape():
 	
 	update_collision_shape_shape(shape)
 	update_collision_shape_position(position)
-	self.collision_shape.disabled = disabled
+	#self.collision_shape.disabled = disabled
+	self.collision_shape.set_deferred(&"disabled", disabled)
 	
 	if self.handle_flip_h and is_collision_shape_parent_flippable():
 		# Improvement idea: flip the CollisionBody2D itself and mirror its x pos

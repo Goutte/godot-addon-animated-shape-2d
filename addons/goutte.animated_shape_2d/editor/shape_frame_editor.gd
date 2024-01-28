@@ -169,6 +169,9 @@ func update():
 		%ShapeHolder.position = shape_frame.position
 		%ShapeHolder.disabled = shape_frame.disabled
 		%ShapeHolder.debug_color = self.animated_shape.collision_shape.debug_color
+		if shape_frame.debug_color != Color.BLACK:
+			%ShapeHolder.debug_color = shape_frame.debug_color
+			
 	
 	# IV. Adjust the preview to the zoom level
 	%ZoomAdjuster.scale = Vector2.ONE * self.zoom_level
@@ -301,6 +304,8 @@ func preview_shape_frame():
 		preview_shape.position = shape_frame.position
 		preview_shape.disabled = shape_frame.disabled
 		preview_shape.debug_color = self.animated_shape.collision_shape.debug_color
+		if shape_frame.debug_color != Color.BLACK:
+			preview_shape.debug_color = shape_frame.debug_color
 	else:
 		if is_instance_valid(preview_shape):
 			preview_shape.queue_free()

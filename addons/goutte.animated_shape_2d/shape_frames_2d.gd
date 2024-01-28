@@ -1,6 +1,7 @@
 @tool
 extends Resource
 class_name ShapeFrames2D
+#class_name Shape2DFrames
 
 ## Resource holding the configuration of a CollisionShape2D,
 ## for each frame of each animation of a SpriteFrames.
