@@ -27,6 +27,7 @@ var undo_redo: EditorUndoRedoManager
 
 signal frame_selected
 signal frame_deselected
+signal changed
 
 
 ## Mandatory dependency injection, since it's best to leave _init() alone.
@@ -91,6 +92,7 @@ func set_shape_frame(value: ShapeFrame2D):
 	)
 	connect_to_shape_frame()
 	update()
+	emit_changed()
 
 
 ## Connect to the edited Resource, in order to update the GUI in real time.
@@ -114,6 +116,14 @@ func is_selected() -> bool:
 
 func select():
 	%SpriteButton.button_pressed = true
+
+
+func show_link_marker():
+	%LinkMarker.show()
+
+
+func hide_link_marker():
+	%LinkMarker.hide()
 
 
 ## The crux of the matter ; update the scene according to the data.
@@ -229,6 +239,16 @@ func inspect_shape_frame():
 			EditorInterface.edit_node(self.animated_shape)
 		return
 	EditorInterface.edit_resource(shape_frame)
+
+
+## The UndoRedo does not like when we use different objects, so we wrap this method here.
+#func set_shape_frame(animation_name: StringName, frame_index: int):
+	#self.animated_shape.shape_frames.set_(animation_name, frame_index)
+
+
+## The UndoRedo does not like when we use different objects, so we wrap this method here.
+func remove_shape_frame():
+	self.animated_shape.shape_frames.remove_shape_frame(self.animation_name, self.frame_index)
 
 
 #  _____                _
@@ -406,14 +426,18 @@ func get_editor_node_from_path(path: Array) -> Node:
 # |______|_|___/\__\___|_| |_|\___|_|  |___/
 #
 
+## UndoRedo won't accept calling methods on signals, so we'll call this instead.
+func emit_changed():
+	self.changed.emit()
 
 func on_shape_frame_changed():
 	update()
+	emit_changed()
 
 
 func _on_sprite_button_toggled(toggled_on: bool):
 	if toggled_on:
-		frame_selected.emit()
+		self.frame_selected.emit()
 		preview_shape_frame()
 		#inspect_shape_frame()  # nope, the preview has priority somehow
 		#inspect_shape_frame.call_deferred()  # nope too
@@ -423,7 +447,7 @@ func _on_sprite_button_toggled(toggled_on: bool):
 				inspect_shape_frame()
 		)
 	else:
-		frame_deselected.emit()
+		self.frame_deselected.emit()
 		remove_preview_of_shape_frame()
 
 
@@ -448,6 +472,7 @@ func _on_create_button_pressed():
 	update()
 	connect_to_shape_frame()
 	inspect_shape_frame()
+	emit_changed()
 
 
 func _on_edit_button_pressed():
@@ -483,34 +508,40 @@ func _on_paste_button_pressed():
 			self, &"disconnect_from_shape_frame",
 		)
 		self.undo_redo.add_do_method(
-			self.animated_shape.shape_frames, &"set_shape_frame",
-			self.animation_name, self.frame_index, pasted_shape_frame,
+			self, &"set_shape_frame",
+			pasted_shape_frame,
 		)
-		self.undo_redo.add_do_method(
-			self, &"connect_to_shape_frame",
-		)
-		self.undo_redo.add_do_method(
-			self, &"update",
-		)
-		self.undo_redo.add_do_method(
-			self, &"inspect_shape_frame",
-		)
+		#self.undo_redo.add_do_method(
+			#self, &"connect_to_shape_frame",
+		#)
+		#self.undo_redo.add_do_method(
+			#self, &"update",
+		#)
+		#self.undo_redo.add_do_method(
+			#self, &"inspect_shape_frame",
+		#)
+		#self.undo_redo.add_do_method(
+			#self, &"emit_changed",
+		#)
 		self.undo_redo.add_undo_method(
 			self, &"disconnect_from_shape_frame",
 		)
 		self.undo_redo.add_undo_method(
-			self.animated_shape.shape_frames, &"set_shape_frame",
-			self.animation_name, self.frame_index, previous_shape_frame,
+			self, &"set_shape_frame",
+			previous_shape_frame,
 		)
-		self.undo_redo.add_undo_method(
-			self, &"connect_to_shape_frame",
-		)
-		self.undo_redo.add_undo_method(
-			self, &"update",
-		)
-		self.undo_redo.add_undo_method(
-			self, &"inspect_shape_frame",
-		)
+		#self.undo_redo.add_undo_method(
+			#self, &"connect_to_shape_frame",
+		#)
+		#self.undo_redo.add_undo_method(
+			#self, &"update",
+		#)
+		#self.undo_redo.add_undo_method(
+			#self, &"inspect_shape_frame",
+		#)
+		#self.undo_redo.add_undo_method(
+			#self, &"emit_changed",
+		#)
 		self.undo_redo.commit_action()
 	else:
 		# Same as above, without the UndoRedo shenanigans.
@@ -520,6 +551,7 @@ func _on_paste_button_pressed():
 		)
 		connect_to_shape_frame()
 		update()
+		emit_changed()
 
 
 func _on_delete_button_pressed():
@@ -535,8 +567,7 @@ func _on_delete_button_pressed():
 			self, &"disconnect_from_shape_frame",
 		)
 		self.undo_redo.add_do_method(
-			self.animated_shape.shape_frames, &"remove_shape_frame",
-			self.animation_name, self.frame_index,
+			self, &"remove_shape_frame",
 		)
 		self.undo_redo.add_do_method(
 			self, &"update",
@@ -544,25 +575,30 @@ func _on_delete_button_pressed():
 		self.undo_redo.add_do_method(
 			self, &"inspect_shape_frame",
 		)
-		self.undo_redo.add_undo_method(
-			self.animated_shape.shape_frames, &"set_shape_frame",
-			self.animation_name, self.frame_index, shape_frame,
+		self.undo_redo.add_do_method(
+			self, &"emit_changed",
 		)
 		self.undo_redo.add_undo_method(
-			self, &"connect_to_shape_frame",
+			self, &"set_shape_frame",
+			shape_frame,
 		)
+		#self.undo_redo.add_undo_method(
+			#self, &"connect_to_shape_frame",
+		#)
 		self.undo_redo.add_undo_method(
 			self, &"update",
 		)
 		self.undo_redo.add_undo_method(
 			self, &"inspect_shape_frame",
+		)
+		self.undo_redo.add_undo_method(
+			self, &"emit_changed",
 		)
 		self.undo_redo.commit_action()
 	else:
 		# Same as above, but without the UndoRedo shenanigans
 		disconnect_from_shape_frame()
-		self.animated_shape.shape_frames.remove_shape_frame(
-			self.animation_name, self.frame_index,
-		)
+		remove_shape_frame()
 		update()
+		emit_changed()
 

@@ -1,6 +1,7 @@
-[gd_scene load_steps=7 format=3 uid="uid://fh5kcvadxlh3"]
+[gd_scene load_steps=8 format=3 uid="uid://fh5kcvadxlh3"]
 
 [ext_resource type="Script" path="res://addons/goutte.animated_shape_2d/editor/shape_frames_bottom_panel_control.gd" id="1_5xwm0"]
+[ext_resource type="Script" path="res://addons/goutte.animated_shape_2d/editor/linked_frames_feedback.gd" id="2_njk1o"]
 [ext_resource type="Texture2D" uid="uid://cwgak166wa6hw" path="res://addons/goutte.animated_shape_2d/editor/icons/zoom_less.png" id="2_rtykk"]
 [ext_resource type="Texture2D" uid="uid://b64sqrouwimqs" path="res://addons/goutte.animated_shape_2d/editor/icons/zoom_more.png" id="3_2217o"]
 [ext_resource type="Texture2D" uid="uid://2vmlyocy0aeu" path="res://addons/goutte.animated_shape_2d/editor/icons/zoom_reset.png" id="3_h377a"]
@@ -15,6 +16,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_5xwm0")
+
+[node name="LinkedFramesFeedback" type="Node" parent="." node_paths=PackedStringArray("editor")]
+script = ExtResource("2_njk1o")
+editor = NodePath("..")
 
 [node name="HSplitContainer" type="HSplitContainer" parent="."]
 layout_mode = 1
@@ -109,6 +114,8 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
+[connection signal="frame_changed" from="." to="LinkedFramesFeedback" method="_on_shape_frames_bottom_panel_control_frame_changed"]
+[connection signal="frame_selected" from="." to="LinkedFramesFeedback" method="_on_shape_frames_bottom_panel_control_frame_selected"]
 [connection signal="item_selected" from="HSplitContainer/AnimationNamesItemList" to="." method="_on_animation_names_item_list_item_selected"]
 [connection signal="pressed" from="HSplitContainer/MarginContainer/ActionContainer/ZoomLessButton" to="." method="_on_zoom_less_button_pressed"]
 [connection signal="pressed" from="HSplitContainer/MarginContainer/ActionContainer/ZoomResetButton" to="." method="_on_zoom_reset_button_pressed"]

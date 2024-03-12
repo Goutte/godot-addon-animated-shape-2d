@@ -1,5 +1,7 @@
 @tool
 extends Control
+class_name ShapeFramesBottomPanelControl
+#class_name ShapeFramesEditor
 
 ## Bottom panel for the Editor, shown along with Output, Debugger, etc.
 ## Dedicated to editing a single AnimatedShape2D.
@@ -27,13 +29,16 @@ var background_color := Color.WEB_GRAY
 ## We assign this procedurally because assigning it in the scene did not work.
 var frames_button_group: ButtonGroup
 
+var currently_selected_animation_name: StringName
+
 ## Array of ShapeFrameEditor currently shown, for the selected animation.
 ## These are the children of frames_container, except when config is missing.
-var frames_list := Array()  # of ShapeFrameEditor
+var frames_list: Array[ShapeFrameEditor] = []  # of ShapeFrameEditor
 
 
 signal frame_selected(animation_name: String, frame_index: int)
 signal frame_deselected(animation_name: String, frame_index: int)
+signal frame_changed(animation_name: String, frame_index: int)
 
 
 func configure(
@@ -128,6 +133,7 @@ func rebuild_animation_names_item_list(
 
 func rebuild_view_of_animation(animation_name: String):
 	clear_shape_frames()
+	self.currently_selected_animation_name = animation_name
 	
 	self.frames_button_group = ButtonGroup.new()
 	var frames_count := self.animated_shape.animated_sprite.sprite_frames.get_frame_count(animation_name)
@@ -146,6 +152,7 @@ func rebuild_view_of_animation(animation_name: String):
 			continue
 		frame_scene.frame_selected.connect(on_frame_selected.bind(frame_scene.animation_name, frame_scene.frame_index))
 		frame_scene.frame_deselected.connect(on_frame_deselected.bind(frame_scene.animation_name, frame_scene.frame_index))
+		frame_scene.changed.connect(on_frame_changed.bind(frame_scene.animation_name, frame_scene.frame_index))
 
 
 func rebuild_view_of_animation_by_index(item_index: int):
@@ -251,6 +258,10 @@ func on_frame_deselected(animation_name: String, frame_index: int):
 	# Below could be a subscriber to the above signal?
 	%ShiftLeftButton.disabled = true
 	%ShiftRightButton.disabled = true
+
+
+func on_frame_changed(animation_name: String, frame_index: int):
+	frame_changed.emit(animation_name, frame_index)
 
 
 ## Updates the bottom panel as the user fills the required properties.

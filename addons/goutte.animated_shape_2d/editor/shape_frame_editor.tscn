@@ -1,6 +1,7 @@
-[gd_scene load_steps=8 format=3 uid="uid://c6fdijn2r2lcs"]
+[gd_scene load_steps=10 format=3 uid="uid://c6fdijn2r2lcs"]
 
 [ext_resource type="Script" path="res://addons/goutte.animated_shape_2d/editor/shape_frame_editor.gd" id="1_pmp4u"]
+[ext_resource type="Texture2D" uid="uid://chl5rhpr6ngqp" path="res://addons/goutte.animated_shape_2d/editor/icons/link.png" id="2_3bsnw"]
 [ext_resource type="Texture2D" uid="uid://hsf5o8ys0vo3" path="res://addons/goutte.animated_shape_2d/editor/icons/remove.png" id="3_bm3kb"]
 [ext_resource type="Texture2D" uid="uid://cbgoa2ilmautt" path="res://addons/goutte.animated_shape_2d/editor/icons/new.png" id="3_j1q7m"]
 [ext_resource type="Texture2D" uid="uid://085a76nwyjqf" path="res://addons/goutte.animated_shape_2d/editor/icons/copy.png" id="4_tt4qt"]
@@ -14,6 +15,9 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 corner_detail = 3
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_qm6te"]
+size = Vector2(256, 256)
 
 [node name="ShapeFrameEditor" type="MarginContainer"]
 light_mask = 0
@@ -67,6 +71,7 @@ layout_mode = 2
 auto_translate = false
 localize_numeral_system = false
 mouse_filter = 2
+texture = SubResource("PlaceholderTexture2D_qm6te")
 stretch_mode = 5
 
 [node name="ZoomAdjuster" type="Node2D" parent="VBoxContainer/MarginContainer/SpriteFrameTexture"]
@@ -78,6 +83,28 @@ gizmo_extents = 6.0
 
 [node name="ShapeHolder" type="CollisionShape2D" parent="VBoxContainer/MarginContainer/SpriteFrameTexture/ZoomAdjuster/Origin"]
 unique_name_in_owner = true
+
+[node name="Control" type="Control" parent="VBoxContainer/MarginContainer"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="LinkMarker" type="TextureRect" parent="VBoxContainer/MarginContainer/Control"]
+unique_name_in_owner = true
+visible = false
+self_modulate = Color(1, 1, 0, 1)
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_top = 4.0
+offset_right = -4.0
+grow_horizontal = 0
+tooltip_text = "All the frames marked with this icon are linked together ;
+that is, if you change one, they will all change.
+To paste without linking, maintain CTRL when pressing the Paste button,
+and it will make a deep copy instead of a shallow (linked) one."
+texture = ExtResource("2_3bsnw")
+metadata/_edit_lock_ = true
 
 [node name="ActionsContainer" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2

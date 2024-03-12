@@ -2,6 +2,7 @@
 @icon("./animated_shape_2d.svg")
 extends Node
 class_name AnimatedShape2D
+#class_name AnimatedCollisionShape2D
 #class_name AnimatedSprite2DCollisions
 #class_name CollisionShape2DFramer
 
@@ -47,6 +48,9 @@ class_name AnimatedShape2D
 ## This is handy if for example all your frames use the same shape,
 ## and shapes only change per animation.
 @export var use_previous_as_fallback := false
+
+## If [code]true[/code], use call_deferred() to set CollisionShape2D properties.
+@export var use_deferred_calls := true
 
 ## Flip horizontally the collision shapes when the animated sprite is flipped,
 ## by inverting the scale of their parent Area2D.  Only works on collision
@@ -118,6 +122,8 @@ func _get_configuration_warnings() -> PackedStringArray:
 func setup():
 	if self.collision_shape == null:
 		return
+	if self.shape_frames == null:
+		return
 	
 	# We might update the original collision shape's shape, so we duplicate
 	if self.collision_shape.shape:
@@ -141,6 +147,8 @@ func get_current_shape_frame() -> ShapeFrame2D:
 
 
 func update_shape():
+	if self.shape_frames == null:
+		return
 	var shape_frame := get_current_shape_frame()
 	
 	var shape: Shape2D = null
@@ -161,8 +169,7 @@ func update_shape():
 	
 	update_collision_shape_shape(shape)
 	update_collision_shape_position(position)
-	#self.collision_shape.disabled = disabled
-	self.collision_shape.set_deferred(&"disabled", disabled)
+	update_collision_shape_disabled(disabled)
 	
 	if self.handle_flip_h and is_collision_shape_parent_flippable():
 		# Improvement idea: flip the CollisionBody2D itself and mirror its x pos
@@ -170,6 +177,13 @@ func update_shape():
 			self.collision_shape_parent.scale.x = -self.initial_scale.x
 		else:
 			self.collision_shape_parent.scale.x = self.initial_scale.x
+
+
+func update_collision_shape_disabled(disabled: bool):
+	if self.use_deferred_calls:
+		self.collision_shape.set_deferred(&"disabled", disabled)
+	else:
+		self.collision_shape.disabled = disabled
 
 
 func update_collision_shape_position(new_position: Vector2):
@@ -253,12 +267,18 @@ func update_collision_shape_shape(new_shape: Shape2D):
 		
 		# If the update cannot be done, we want a duplicate of the shape
 		# because we might update it later on.
-		self.collision_shape.shape = new_shape.duplicate(true)
+		if use_deferred_calls:
+			self.collision_shape.set_deferred(&"shape", new_shape.duplicate(true))
+		else:
+			self.collision_shape.shape = new_shape.duplicate(true)
 		return
 	
 	# Or perhaps just simply REPLACE the shape.
 	# This triggers (possibly unwanted) extra area_entered signals.
-	self.collision_shape.shape = new_shape
+	if use_deferred_calls:
+		self.collision_shape.set_deferred(&"shape", new_shape)
+	else:
+		self.collision_shape.shape = new_shape
 
 
 # Make the shape properties go towards their target, but not by more than
