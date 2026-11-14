@@ -1,3 +1,6 @@
-# Godot 4+ specific ignores
+# We don't want the .import files that are automatically created when opening the repo/demo in Godot Editor.
+/addons/**/*.import
+
+
+# Godot 4+
 .godot/
-/android/
