@@ -3,8 +3,6 @@
 extends Node
 class_name AnimatedShape2D
 #class_name AnimatedCollisionShape2D
-#class_name AnimatedSprite2DCollisions
-#class_name CollisionShape2DFramer
 
 ## Customizes a CollisionShape2D for each frame of an AnimatedSprite2D.
 
@@ -16,7 +14,7 @@ class_name AnimatedShape2D
 # 
 # Notes:
 # - You can put this pretty much anywhere you want in your scene.
-# - This _could_ be a script on a CollisionShape2D, but this way your are free
+# - This _could_ be a script on a CollisionShape2D, but this way you are free
 #   to have your own script on your collision shape if you want to.
 # - This is quite experimental ; contributions are welcome.
 #   https://github.com/Goutte/godot-addon-animated-shape-2d
@@ -117,6 +115,12 @@ func _get_configuration_warnings() -> PackedStringArray:
 	if self.shape_frames == null:
 		warnings.append("This node requires a ShapeFrames2D to store data.  Make a new one?")
 	return warnings
+
+
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_EDITOR_POST_SAVE:
+			update_configuration_warnings()
 
 
 func setup():
