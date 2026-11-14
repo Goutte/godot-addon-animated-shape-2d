@@ -24,13 +24,13 @@ class_name AnimatedShape2D
 @export var animated_sprite: AnimatedSprite2D
 
 ## Target collision shape whose shape we're going to write to.
-## We're also going to configure this CollisionShape2D (position, disabled)
+## We're also going to configure this CollisionShape2D (position, disabled…)
 ## for each frame of the AnimatedSprite2D above.
 @export var collision_shape: CollisionShape2D
 
 ## Shape data for each animation and frame of the animated sprite.
 ## This holds enough data to configure the collision shape for each frame
-## of the animated sprite: shape, position, disabled…
+## of the animated sprite: shape, position, rotation, disabled…
 @export var shape_frames: ShapeFrames2D
 
 ## If [code]true[/code], use the initial shape in the target CollisionShape2D
@@ -59,6 +59,11 @@ class_name AnimatedShape2D
 ## Only used in the [code]INTERPOLATE[/code] mode.
 @export var interpolation_step := 3.0
 
+## Maximum amount (in radians) of rotation change per physics frame.
+## Only used in the [code]INTERPOLATE[/code] mode.
+## NOTE: the current default value has not been tested ; do suggest a better one
+@export var interpolation_step_rotation := 0.1 * TAU
+
 
 enum SHAPE_UPDATE_MODE {
 	## Update the existing shape resource properties in the CollisionShape2D,
@@ -78,15 +83,20 @@ enum SHAPE_UPDATE_MODE {
 ## Weird things will happen if you change this at runtime.
 @export var update_shape_mode := SHAPE_UPDATE_MODE.UPDATE
 
-
-var fallback_shape: Shape2D
-var fallback_position: Vector2
+# This fallback is essentially an inlined ShapeFrame2D.
+# > I'm not sure why it's inlined like this and not a ShapeFrame2D.
 var fallback_disabled: bool
+var fallback_position: Vector2
+var fallback_rotation: float
+var fallback_shape: Shape2D
+
 var initial_scale: Vector2
 var collision_shape_parent: Node2D
 
 var is_tweening_collision_shape_position := false
 var target_collision_shape_position := Vector2.ZERO
+var is_tweening_collision_shape_rotation := false
+var target_collision_shape_rotation: float
 var is_tweening_collision_shape_shape := false
 var target_collision_shape_shape: Shape2D
 
@@ -102,6 +112,8 @@ func _ready():
 func _physics_process(_delta: float):
 	if self.is_tweening_collision_shape_position:
 		tween_collision_shape_position()
+	if self.is_tweening_collision_shape_rotation:
+		tween_collision_shape_rotation()
 	if self.is_tweening_collision_shape_shape:
 		tween_collision_shape_shape()
 
@@ -129,11 +141,13 @@ func setup():
 	if self.shape_frames == null:
 		return
 	
-	# We might update the original collision shape's shape, so we duplicate
-	if self.collision_shape.shape:
-		self.fallback_shape = self.collision_shape.shape.duplicate(true)
-	self.fallback_position = self.collision_shape.position
 	self.fallback_disabled = self.collision_shape.disabled
+	self.fallback_position = self.collision_shape.position
+	self.fallback_rotation = self.collision_shape.rotation
+	if self.collision_shape.shape:
+		# We might update the original collision shape's shape, so we duplicate
+		self.fallback_shape = self.collision_shape.shape.duplicate(true)
+	
 	self.collision_shape_parent = self.collision_shape.get_parent()
 	if self.collision_shape_parent != null:
 		self.initial_scale = self.collision_shape_parent.scale
@@ -159,9 +173,11 @@ func update_shape():
 	if shape_frame != null:
 		shape = shape_frame.get_shape()
 	var position := Vector2.ZERO
+	var rotation := 0.0
 	var disabled := false
 	if shape_frame != null:
 		position = shape_frame.position
+		rotation = shape_frame.rotation
 		disabled = shape_frame.disabled
 	if shape == null and self.use_previous_as_fallback:
 		# Improvement idea: allow flipping in this case as well
@@ -169,10 +185,12 @@ func update_shape():
 	if shape == null and self.use_initial_as_fallback:
 		shape = self.fallback_shape
 		position = self.fallback_position
+		rotation = self.fallback_rotation
 		disabled = self.fallback_disabled
 	
 	update_collision_shape_shape(shape)
 	update_collision_shape_position(position)
+	update_collision_shape_rotation(rotation)
 	update_collision_shape_disabled(disabled)
 	
 	if self.handle_flip_h and is_collision_shape_parent_flippable():
@@ -197,8 +215,21 @@ func update_collision_shape_position(new_position: Vector2):
 	if self.update_shape_mode == SHAPE_UPDATE_MODE.INTERPOLATE:
 		self.is_tweening_collision_shape_position = true
 		self.target_collision_shape_position = new_position
-	else:
-		self.collision_shape.position = new_position
+		return
+	
+	self.collision_shape.position = new_position
+
+
+func update_collision_shape_rotation(new_rotation: float):
+	if new_rotation == self.collision_shape.rotation:
+		return
+	
+	if self.update_shape_mode == SHAPE_UPDATE_MODE.INTERPOLATE:
+		self.is_tweening_collision_shape_rotation = true
+		self.target_collision_shape_rotation = new_rotation
+		return
+	
+	self.collision_shape.rotation = new_rotation
 
 
 func update_collision_shape_shape(new_shape: Shape2D):
@@ -438,6 +469,20 @@ func tween_collision_shape_position():
 	
 	if self.collision_shape.position == self.target_collision_shape_position:
 		self.is_tweening_collision_shape_position = false
+
+
+func tween_collision_shape_rotation():
+	if not self.is_tweening_collision_shape_rotation:
+		return
+	
+	self.collision_shape.rotation += clampf(
+		self.target_collision_shape_rotation - self.collision_shape.rotation,
+		-self.interpolation_step_rotation,
+		self.interpolation_step_rotation,
+	)
+	
+	if self.collision_shape.rotation == self.target_collision_shape_rotation:
+		self.is_tweening_collision_shape_rotation = false
 
 
 ## We don't want to flip PhysicsBodies because it creates odd behaviors.

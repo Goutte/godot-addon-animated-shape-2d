@@ -17,6 +17,13 @@ class_name ShapeFrame2D
 			position = value
 			emit_changed()
 
+## Rotation (in radians) of the collision shape in its parent.
+@export var rotation := 0.0:
+	set(value):
+		if value != rotation:
+			rotation = value
+			emit_changed()
+
 ## Disable the collision shape when [code]true[/code].
 @export var disabled := false:
 	set(value):
@@ -29,7 +36,6 @@ class_name ShapeFrame2D
 
 func get_shape() -> Shape2D:
 	return shape
-
 
 func set_shape(value: Shape2D):
 	shape = value

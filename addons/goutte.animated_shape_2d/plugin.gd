@@ -69,4 +69,3 @@ func on_inspector_edited_object_changed():
 	if edited_object is AnimatedShape2D:
 		animated_shape = edited_object as AnimatedShape2D
 	update_bottom_panel(animated_shape)
-
