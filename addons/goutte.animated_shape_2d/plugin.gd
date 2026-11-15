@@ -16,12 +16,12 @@ var bottom_panel_control: Control
 
 
 func _enter_tree():
-	# I. Register the "Animated Shape" bottom panel.
+	# I. Register our bottom panel.
 	self.bottom_panel_control = BOTTOM_PANEL_CONTROL_SCENE.instantiate()
 	self.bottom_panel_control.configure(self)
 	self.bottom_panel_button = add_control_to_bottom_panel(
 		self.bottom_panel_control,
-		tr("Animated Shape"),
+		tr("ShapeFrames"),
 	)
 	
 	# II. Show/Hide it depending on what's inspected in the Inspector.
