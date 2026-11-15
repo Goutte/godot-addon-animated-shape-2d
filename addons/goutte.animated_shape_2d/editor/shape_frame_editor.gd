@@ -347,36 +347,44 @@ func preview_shape_frame():
 	if is_instance_valid(preview_shape) and not already_selected:
 		EditorInterface.get_selection().clear()
 		EditorInterface.get_selection().add_node(preview_shape)
-		# Whatever the doc says, the node already IS inspected.  Might change.
-		# Anyway we don't even WANT to inspect this node, and we have to hack
-		# around this unwanted inspection, see _on_sprite_button_toggled().
-		#EditorInterface.edit_node(preview_shape)
 		
-		# This path was created using the infamous Editor Debugger with a tweak.
-		# We are not using the raw index in parent, but index by class in parent
-		# because it will be a little more resilient to changes in the tree.
-		# This is a hack, and may not play nice with third party plugins.
-		# If you know of another way to enable the mouse move mode, plz share!
 		# We need to use the mouse move mode because the selection mode does
 		# not like non-owned nodes, even if they are _already selected_.
-		var path := [  # [ class, index_by_class_in_parent ]
-			["VBoxContainer", 0], ["HSplitContainer", 0],
-			["HSplitContainer", 0], ["HSplitContainer", 0],
-			["VBoxContainer", 0], ["VSplitContainer", 0],
-			["VSplitContainer", 0], ["VBoxContainer", 0],
-			["PanelContainer", 0], ["VBoxContainer", 0],
-			["CanvasItemEditor", 0], ["MarginContainer", 0],
-			["HFlowContainer", 0], ["HBoxContainer", 0],
-			["Button", 1],
-		]
-		var mouse_move_button := get_editor_node_from_path(path) as Button
+		# The selection mode can resize, but not reposition.
+		var mouse_move_button := get_mouse_mode_button_by_icon(&"ToolMove")
 		if mouse_move_button != null:
 			mouse_move_button.pressed.emit()
 		else:
-			# Ouch, the hack above broke, as expected.  Best ignore this.
+			# Ouch, the hack above broke, as expected. Best ignore this "error".
 			# Just make sure you use the Mouse Move Mode when editing the 2D
 			# preview, and not the Select Mode (we can't reposition with it).
 			push_warning("Mouse Move Button of 2D View was not found.")
+
+
+## This is a hacky way of finding the tool button, by matching its icon.
+## If you know how to do this properly, please share.
+func get_mouse_mode_button_by_icon(icon_name: StringName) -> Button:
+	var main_screen: Control = EditorInterface.get_editor_main_screen()
+	var target_editor_class: String = "CanvasItemEditor"
+	
+	var editor_container: Node = null
+	for child in main_screen.get_children():
+		if child.get_class() == target_editor_class:
+			editor_container = child
+			break
+	
+	if not editor_container:
+		push_warning("Failed to find the %s node." % [target_editor_class])
+		return null
+	
+	var target_icon := EditorInterface.get_base_control().get_theme_icon(icon_name, "EditorIcons")
+	var buttons := editor_container.find_children("*", "Button", true, false)
+	
+	for button: Button in buttons:
+		if button.icon == target_icon:
+			return button
+	
+	return null
 
 
 func on_preview_shape_rectangle_changed():

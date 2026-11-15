@@ -9,20 +9,21 @@ extends EditorPlugin
 # - A GUI for editing a ShapeFrame2D, similar to the SpriteFrames GUI.
 #
 
-const BOTTOM_PANEL_CONTROL_SCENE := preload("./editor/shape_frames_bottom_panel_control.tscn")
+const SHAPE_FRAMES_EDITOR_SCENE := preload("./editor/shape_frames_bottom_panel_control.tscn")
 
-var bottom_panel_button: Button
-var bottom_panel_control: Control
-
+var shape_frames_editor: Control
+var shape_frames_dock: EditorDock
 
 func _enter_tree():
-	# I. Register our bottom panel.
-	self.bottom_panel_control = BOTTOM_PANEL_CONTROL_SCENE.instantiate()
-	self.bottom_panel_control.configure(self)
-	self.bottom_panel_button = add_control_to_bottom_panel(
-		self.bottom_panel_control,
-		tr("ShapeFrames"),
-	)
+	# I. Register our shape frames editor in one of the bottom dock slots.
+	self.shape_frames_editor = SHAPE_FRAMES_EDITOR_SCENE.instantiate()
+	self.shape_frames_editor.configure(self)
+	
+	self.shape_frames_dock = EditorDock.new()
+	self.shape_frames_dock.title = tr("ShapeFrames")
+	self.shape_frames_dock.default_slot = EditorDock.DOCK_SLOT_BOTTOM
+	self.shape_frames_dock.add_child(self.shape_frames_editor)
+	add_dock(self.shape_frames_dock)
 	
 	# II. Show/Hide it depending on what's inspected in the Inspector.
 	#     This could also work using what's selected in the Scene Tree Editor?
@@ -33,8 +34,14 @@ func _enter_tree():
 
 
 func _exit_tree():
-	remove_control_from_bottom_panel(self.bottom_panel_control)
+	# I. Deregister our dock and 
+	remove_dock(self.shape_frames_dock)
+	self.shape_frames_editor.queue_free()  # zealous, but it's OK
+	self.shape_frames_editor = null
+	self.shape_frames_dock.queue_free()
+	self.shape_frames_dock = null
 	
+	# II. And don't forget to (un)suscribe — and hit the bell icon
 	if get_editor_interface().get_inspector().edited_object_changed.is_connected(
 		on_inspector_edited_object_changed,
 	):
@@ -45,14 +52,11 @@ func _exit_tree():
 
 func update_bottom_panel(animated_shape: AnimatedShape2D):
 	if animated_shape == null:
-		self.bottom_panel_button.button_pressed = false
-		self.bottom_panel_button.visible = false
-		self.bottom_panel_control.clear()
+		self.shape_frames_dock.close()
 		return
 	
-	self.bottom_panel_button.visible = true
-	self.bottom_panel_button.button_pressed = true
-	self.bottom_panel_control.rebuild_gui(animated_shape)
+	self.shape_frames_dock.make_visible()
+	self.shape_frames_editor.rebuild_gui(animated_shape)
 
 
 func on_inspector_edited_object_changed():

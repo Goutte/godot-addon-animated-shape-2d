@@ -69,6 +69,9 @@ func rebuild_gui(
 	if (self.animated_shape == for_animated_shape) and not force:
 		return
 	
+	#print("Rebuilding GUI (force=%s)" % [force])
+	#set_panel_height.call_deferred(250)
+	
 	clear()
 	self.animated_shape = for_animated_shape
 	
@@ -295,12 +298,8 @@ func _on_zoom_reset_button_pressed():
 
 func _on_zoom_more_button_pressed():
 	var new_zoom_level := self.zoom_level + 1.0
-	# Note: current zoom logic in TextureRect won't allow going below 1
-	#if self.zoom_level <= 1.0:
-		#new_zoom_level = self.zoom_level * 2.0
-	#new_zoom_level = max(0.125, new_zoom_level)
 	new_zoom_level = max(1.0, new_zoom_level)
-	new_zoom_level = min(10.0, new_zoom_level)
+	new_zoom_level = min(16.0, new_zoom_level)
 	set_zoom_level(new_zoom_level)
 
 
@@ -315,4 +314,3 @@ func _on_shift_left_button_pressed():
 
 func _on_shift_right_button_pressed():
 	shift_frames_from_selected(1)
-
