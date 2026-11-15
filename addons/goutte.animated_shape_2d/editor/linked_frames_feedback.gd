@@ -34,4 +34,3 @@ func _on_shape_frames_bottom_panel_control_frame_selected(animation_name: String
 func _on_shape_frames_bottom_panel_control_frame_changed(animation_name, frame_index):
 	var selected_frame_editor := editor.get_selected_frame()
 	update_for(selected_frame_editor.animation_name, selected_frame_editor.frame_index)
-
