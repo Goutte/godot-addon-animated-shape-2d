@@ -9,3 +9,6 @@
 /.gitignore                              export-ignore
 /.gitattributes                          export-ignore
 /addons/goutte.animated_shape_2d/extras  export-ignore
+/.editorconfig                           export-ignore
+/demos                                   export-ignore
+/project.godot                           export-ignore
