@@ -172,26 +172,26 @@ func update_shape():
 	var shape: Shape2D = null
 	if shape_frame != null:
 		shape = shape_frame.get_shape()
+	var disabled := false
 	var position := Vector2.ZERO
 	var rotation := 0.0
-	var disabled := false
 	if shape_frame != null:
+		disabled = shape_frame.disabled
 		position = shape_frame.position
 		rotation = shape_frame.rotation
-		disabled = shape_frame.disabled
 	if shape == null and self.use_previous_as_fallback:
 		# Improvement idea: allow flipping in this case as well
 		return
 	if shape == null and self.use_initial_as_fallback:
 		shape = self.fallback_shape
+		disabled = self.fallback_disabled
 		position = self.fallback_position
 		rotation = self.fallback_rotation
-		disabled = self.fallback_disabled
 	
 	update_collision_shape_shape(shape)
+	update_collision_shape_disabled(disabled)
 	update_collision_shape_position(position)
 	update_collision_shape_rotation(rotation)
-	update_collision_shape_disabled(disabled)
 	
 	if self.handle_flip_h and is_collision_shape_parent_flippable():
 		# Improvement idea: flip the CollisionBody2D itself and mirror its x pos
