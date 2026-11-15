@@ -45,6 +45,7 @@ clip_contents = true
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/pressed = SubResource("StyleBoxFlat_ahkyv")
+theme_override_styles/hover_pressed = SubResource("StyleBoxFlat_ahkyv")
 toggle_mode = true
 
 [node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/MarginContainer/SpriteButton" unique_id=618157004]
