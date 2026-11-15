@@ -182,8 +182,9 @@ func update():
 		%ShapeHolder.shape = null
 	else:
 		%ShapeHolder.shape = shape_frame.get_shape()
-		%ShapeHolder.position = shape_frame.position
 		%ShapeHolder.disabled = shape_frame.disabled
+		%ShapeHolder.position = shape_frame.position
+		%ShapeHolder.rotation = shape_frame.rotation
 		%ShapeHolder.debug_color = self.animated_shape.collision_shape.debug_color
 		if shape_frame.debug_color != Color.BLACK:
 			%ShapeHolder.debug_color = shape_frame.debug_color
@@ -328,8 +329,9 @@ func preview_shape_frame():
 			preview_shape.item_rect_changed.connect(on_preview_shape_rect_changed)
 			self.animated_shape.collision_shape.add_sibling(preview_shape)
 		preview_shape.shape = shape_frame.shape
-		preview_shape.position = shape_frame.position
 		preview_shape.disabled = shape_frame.disabled
+		preview_shape.position = shape_frame.position
+		preview_shape.rotation = shape_frame.rotation
 		preview_shape.debug_color = self.animated_shape.collision_shape.debug_color
 		if shape_frame.debug_color != Color.BLACK:
 			preview_shape.debug_color = shape_frame.debug_color
@@ -370,7 +372,8 @@ func preview_shape_frame():
 # name: @WindowWrapper@11751 class: WindowWrapper
 # name: @WindowWrapper@11833 class: WindowWrapper
 # name: @EditorAssetLibrary@12226 class: EditorAssetLibrary
-# I'm not sure why the names look like this and at this point I'm too afraid to ask.
+# I'm not sure why the node names look like this and at this point I'm too afraid to ask.
+# Anyway, we can discriminate using the class name, that's good enough.
 func get_mouse_mode_button_by_icon(icon_name: StringName) -> Button:
 	var main_screen: Control = EditorInterface.get_editor_main_screen()
 	var editor_class: String = "CanvasItemEditor"
@@ -419,31 +422,7 @@ func update_from_preview_shape():
 	if not is_instance_valid(self.preview_shape):
 		return
 	shape_frame.position = self.preview_shape.position
-
-
-## Tool (could be static) to fetch a node from a weird path of [type, index],
-## where the index is only amongst nodes of the specified type,
-## to be more resilient to changes in the tree that will break the path.
-## This path is for the Editor only and starts in the base editor control.
-## Use the (modded) "editor_debug" addon to get the path (copy typed path). F10
-func get_editor_node_from_path(path: Array) -> Node:
-	var node := EditorInterface.get_base_control()
-	for datum in path:
-		var node_class: String = datum[0]
-		var node_index: int = datum[1]
-		var current_index := 0
-		var found := false
-		for child in node.get_children():
-			if child.get_class() != node_class:
-				continue
-			if current_index == node_index:
-				node = child
-				found = true
-				break
-			current_index += 1
-		if not found:
-			return null
-	return node
+	shape_frame.rotation = self.preview_shape.rotation
 
 
 #  _      _     _
