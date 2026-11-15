@@ -262,10 +262,11 @@ func remove_shape_frame():
 # | |__) | __ _____   ___  _____      __
 # |  ___/ '__/ _ \ \ / / |/ _ \ \ /\ / /
 # | |   | | |  __/\ V /| |  __/\ V  V /
-# |_|   |_|  \___| \_/ |_|\___| \_/\_/
+# |_|   |_|  \___| \_/ |_|\___| \_/\_/   Gizmo
 #
 # The big one shown in the 2D Editor when we select this shape frame.
 # This is actually more than a preview since we can *edit* the shape with it.
+# Perhaps we should call this Gizmo, to distinguish it from the bottom preview.
 
 
 var sprite_preview: AnimatedSprite2D
@@ -292,14 +293,14 @@ func remove_preview_of_shape_frame():
 func preview_shape_frame():
 	if not is_instance_valid(sprite_preview):
 		sprite_preview = animated_shape.animated_sprite.duplicate()
-		sprite_preview.name = "PreviewAnimatedSprite2D"
+		sprite_preview.name = &"PreviewAnimatedSprite2D"
 		sprite_preview.owner = null
 	sprite_preview.animation = self.animation_name
 	sprite_preview.frame = self.frame_index
 	
 	if not is_instance_valid(preview_background):
 		preview_background = ColorRect.new()
-		preview_background.name = "PreviewBackgroundColorRect"
+		preview_background.name = &"PreviewBackgroundColorRect"
 		preview_background.owner = null
 		preview_background.show_behind_parent = true
 		preview_background.set_anchors_preset(PRESET_FULL_RECT)
@@ -321,7 +322,7 @@ func preview_shape_frame():
 	if shape_frame != null:
 		if not is_instance_valid(preview_shape):
 			preview_shape = CollisionShape2D.new()
-			preview_shape.name = "PreviewCollisionShape2D"
+			preview_shape.name = &"PreviewCollisionShape2D"
 			preview_shape.set_script(SHAPE_PREVIEW_SCRIPT)
 			preview_shape.rectangle_changed.connect(on_preview_shape_rectangle_changed)
 			preview_shape.item_rect_changed.connect(on_preview_shape_rect_changed)
@@ -358,23 +359,30 @@ func preview_shape_frame():
 			# Ouch, the hack above broke, as expected. Best ignore this "error".
 			# Just make sure you use the Mouse Move Mode when editing the 2D
 			# preview, and not the Select Mode (we can't reposition with it).
-			push_warning("Mouse Move Button of 2D View was not found.")
+			push_warning("Mouse Move Button of 2D Workspace not found.  Make sure you use the Mouse Move Mode when editing the 2D Preview of your shape, because the Select Mode is not able to reposition it.")
 
 
 ## This is a hacky way of finding the tool button, by matching its icon.
 ## If you know how to do this properly, please share.
+# Here's a dump of the children of the main screen:
+# name: @CanvasItemEditor@10138 class: CanvasItemEditor
+# name: @Node3DEditor@10898 class: Node3DEditor
+# name: @WindowWrapper@11751 class: WindowWrapper
+# name: @WindowWrapper@11833 class: WindowWrapper
+# name: @EditorAssetLibrary@12226 class: EditorAssetLibrary
+# I'm not sure why the names look like this and at this point I'm too afraid to ask.
 func get_mouse_mode_button_by_icon(icon_name: StringName) -> Button:
 	var main_screen: Control = EditorInterface.get_editor_main_screen()
-	var target_editor_class: String = "CanvasItemEditor"
+	var editor_class: String = "CanvasItemEditor"
 	
 	var editor_container: Node = null
 	for child in main_screen.get_children():
-		if child.get_class() == target_editor_class:
+		if child.get_class() == editor_class:
 			editor_container = child
 			break
 	
 	if not editor_container:
-		push_warning("Failed to find the %s node." % [target_editor_class])
+		push_warning("Failed to find the node with class '%s'." % [editor_class])
 		return null
 	
 	var target_icon := EditorInterface.get_base_control().get_theme_icon(icon_name, "EditorIcons")
@@ -385,6 +393,12 @@ func get_mouse_mode_button_by_icon(icon_name: StringName) -> Button:
 			return button
 	
 	return null
+
+
+#func dump_main_screen_children():
+	#var main_screen: Control = EditorInterface.get_editor_main_screen()
+	#for child in main_screen.get_children():
+		#prints("name:", child.name, "class:", child.get_class())
 
 
 func on_preview_shape_rectangle_changed():
@@ -475,6 +489,7 @@ func _on_create_button_pressed():
 	shape_frame = ShapeFrame2D.new()
 	shape_frame.disabled = self.animated_shape.collision_shape.disabled
 	shape_frame.position = self.animated_shape.collision_shape.position
+	shape_frame.rotation = self.animated_shape.collision_shape.rotation
 	if self.animated_shape.collision_shape.shape:
 		shape_frame.shape = self.animated_shape.collision_shape.shape.duplicate(true)
 	else:
