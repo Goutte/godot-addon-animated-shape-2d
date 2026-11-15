@@ -9,6 +9,12 @@ class_name ShapeFrameEditor
 const SHAPE_PREVIEW_SCRIPT := preload("./shape_preview.gd")
 
 
+# Using @export instead of @onready allows accessing these subnodes at any time,
+# including before ready and during the exit from the tree. (we want both)
+# We do have to manyually set them (once) in the inspector, which is OK.
+@export var sprite_button: Button  # %SpriteButton
+
+
 ## Animated shape resource we are editing.
 ## This holds enough data to configure a CollisionShape2D for a specific frame.
 var animated_shape: AnimatedShape2D
@@ -68,7 +74,7 @@ func _exit_tree():
 func build(button_group: ButtonGroup):
 	update()
 	# I had to set the ButtonGroup procedurally, a resource file won't work.
-	%SpriteButton.button_group = button_group
+	sprite_button.button_group = button_group
 
 
 func get_shape_frame() -> ShapeFrame2D:
@@ -111,11 +117,11 @@ func disconnect_from_shape_frame():
 
 
 func is_selected() -> bool:
-	return %SpriteButton.button_pressed
+	return sprite_button.button_pressed
 
 
 func select():
-	%SpriteButton.button_pressed = true
+	sprite_button.button_pressed = true
 
 
 func show_link_marker():
@@ -190,10 +196,10 @@ func update():
 	%BackgroundColor.color = self.background_color
 	
 	# VI. Tooltip on the main sprite button
-	%SpriteButton.tooltip_text = "%s/%d" % [self.animation_name, self.frame_index]
+	sprite_button.tooltip_text = "%s/%d" % [self.animation_name, self.frame_index]
 	if shape_frame != null:
-		%SpriteButton.tooltip_text += " %s" % [shape_frame]
-		%SpriteButton.tooltip_text += "\nClick to edit."
+		sprite_button.tooltip_text += " %s" % [shape_frame]
+		sprite_button.tooltip_text += "\nClick to edit."
 	
 	# X. Action button: Create
 	if shape_frame == null:
@@ -601,4 +607,3 @@ func _on_delete_button_pressed():
 		remove_shape_frame()
 		update()
 		emit_changed()
-

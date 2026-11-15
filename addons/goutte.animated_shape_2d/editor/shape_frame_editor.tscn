@@ -1,12 +1,12 @@
-[gd_scene load_steps=10 format=3 uid="uid://c6fdijn2r2lcs"]
+[gd_scene format=3 uid="uid://c6fdijn2r2lcs"]
 
-[ext_resource type="Script" path="res://addons/goutte.animated_shape_2d/editor/shape_frame_editor.gd" id="1_pmp4u"]
-[ext_resource type="Texture2D" uid="uid://chl5rhpr6ngqp" path="res://addons/goutte.animated_shape_2d/editor/icons/link.png" id="2_3bsnw"]
-[ext_resource type="Texture2D" uid="uid://hsf5o8ys0vo3" path="res://addons/goutte.animated_shape_2d/editor/icons/remove.png" id="3_bm3kb"]
-[ext_resource type="Texture2D" uid="uid://cbgoa2ilmautt" path="res://addons/goutte.animated_shape_2d/editor/icons/new.png" id="3_j1q7m"]
-[ext_resource type="Texture2D" uid="uid://085a76nwyjqf" path="res://addons/goutte.animated_shape_2d/editor/icons/copy.png" id="4_tt4qt"]
-[ext_resource type="Texture2D" uid="uid://be0cxufi44ytn" path="res://addons/goutte.animated_shape_2d/editor/icons/edit.png" id="5_q0gfy"]
-[ext_resource type="Texture2D" uid="uid://c5mpguq347mtg" path="res://addons/goutte.animated_shape_2d/editor/icons/paste.png" id="5_tdv8b"]
+[ext_resource type="Script" uid="uid://bxud4o0kjw57h" path="res://addons/goutte.animated_shape_2d/editor/shape_frame_editor.gd" id="1_pmp4u"]
+[ext_resource type="Texture2D" uid="uid://blhhxp5ut57cy" path="res://addons/goutte.animated_shape_2d/editor/icons/link.png" id="2_3bsnw"]
+[ext_resource type="Texture2D" uid="uid://b46dofcgfc0ls" path="res://addons/goutte.animated_shape_2d/editor/icons/remove.png" id="3_bm3kb"]
+[ext_resource type="Texture2D" uid="uid://xv33a3uo18c6" path="res://addons/goutte.animated_shape_2d/editor/icons/new.png" id="3_j1q7m"]
+[ext_resource type="Texture2D" uid="uid://s8m3y87jt5ch" path="res://addons/goutte.animated_shape_2d/editor/icons/copy.png" id="4_tt4qt"]
+[ext_resource type="Texture2D" uid="uid://gioorbvs5ujr" path="res://addons/goutte.animated_shape_2d/editor/icons/edit.png" id="5_q0gfy"]
+[ext_resource type="Texture2D" uid="uid://djpyjux0towne" path="res://addons/goutte.animated_shape_2d/editor/icons/paste.png" id="5_tdv8b"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ahkyv"]
 bg_color = Color(1, 1, 1, 1)
@@ -19,25 +19,26 @@ corner_detail = 3
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_qm6te"]
 size = Vector2(256, 256)
 
-[node name="ShapeFrameEditor" type="MarginContainer"]
+[node name="ShapeFrameEditor" type="MarginContainer" unique_id=1065226662 node_paths=PackedStringArray("sprite_button")]
+auto_translate_mode = 2
 light_mask = 0
 offset_right = 72.0
 offset_bottom = 72.0
-auto_translate = false
 localize_numeral_system = false
 theme_override_constants/margin_left = 4
 theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 4
 theme_override_constants/margin_bottom = 4
 script = ExtResource("1_pmp4u")
+sprite_button = NodePath("VBoxContainer/MarginContainer/SpriteButton")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=85018383]
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer" unique_id=341457062]
 layout_mode = 2
 
-[node name="SpriteButton" type="Button" parent="VBoxContainer/MarginContainer"]
+[node name="SpriteButton" type="Button" parent="VBoxContainer/MarginContainer" unique_id=898093151]
 unique_name_in_owner = true
 editor_description = "Button Group is set procedurally because setting it here did not work as expected."
 clip_contents = true
@@ -46,7 +47,7 @@ mouse_default_cursor_shape = 2
 theme_override_styles/pressed = SubResource("StyleBoxFlat_ahkyv")
 toggle_mode = true
 
-[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/MarginContainer/SpriteButton"]
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/MarginContainer/SpriteButton" unique_id=618157004]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -58,37 +59,37 @@ theme_override_constants/margin_top = 3
 theme_override_constants/margin_right = 3
 theme_override_constants/margin_bottom = 3
 
-[node name="BackgroundColor" type="ColorRect" parent="VBoxContainer/MarginContainer/SpriteButton/MarginContainer"]
+[node name="BackgroundColor" type="ColorRect" parent="VBoxContainer/MarginContainer/SpriteButton/MarginContainer" unique_id=1688482779]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 color = Color(0.341176, 0.341176, 0.341176, 1)
 
-[node name="SpriteFrameTexture" type="TextureRect" parent="VBoxContainer/MarginContainer"]
+[node name="SpriteFrameTexture" type="TextureRect" parent="VBoxContainer/MarginContainer" unique_id=623627498]
 unique_name_in_owner = true
+auto_translate_mode = 2
 light_mask = 0
 layout_mode = 2
-auto_translate = false
 localize_numeral_system = false
 mouse_filter = 2
 texture = SubResource("PlaceholderTexture2D_qm6te")
 stretch_mode = 5
 
-[node name="ZoomAdjuster" type="Node2D" parent="VBoxContainer/MarginContainer/SpriteFrameTexture"]
+[node name="ZoomAdjuster" type="Node2D" parent="VBoxContainer/MarginContainer/SpriteFrameTexture" unique_id=334596400]
 unique_name_in_owner = true
 
-[node name="Origin" type="Marker2D" parent="VBoxContainer/MarginContainer/SpriteFrameTexture/ZoomAdjuster"]
+[node name="Origin" type="Marker2D" parent="VBoxContainer/MarginContainer/SpriteFrameTexture/ZoomAdjuster" unique_id=194202488]
 unique_name_in_owner = true
 gizmo_extents = 6.0
 
-[node name="ShapeHolder" type="CollisionShape2D" parent="VBoxContainer/MarginContainer/SpriteFrameTexture/ZoomAdjuster/Origin"]
+[node name="ShapeHolder" type="CollisionShape2D" parent="VBoxContainer/MarginContainer/SpriteFrameTexture/ZoomAdjuster/Origin" unique_id=1101123991]
 unique_name_in_owner = true
 
-[node name="Control" type="Control" parent="VBoxContainer/MarginContainer"]
+[node name="Control" type="Control" parent="VBoxContainer/MarginContainer" unique_id=416177632]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="LinkMarker" type="TextureRect" parent="VBoxContainer/MarginContainer/Control"]
+[node name="LinkMarker" type="TextureRect" parent="VBoxContainer/MarginContainer/Control" unique_id=284922173]
 unique_name_in_owner = true
 visible = false
 self_modulate = Color(1, 1, 0, 1)
@@ -106,11 +107,11 @@ and it will make a deep copy instead of a shallow (linked) one."
 texture = ExtResource("2_3bsnw")
 metadata/_edit_lock_ = true
 
-[node name="ActionsContainer" type="HBoxContainer" parent="VBoxContainer"]
+[node name="ActionsContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=745853578]
 layout_mode = 2
 alignment = 1
 
-[node name="CreateButton" type="Button" parent="VBoxContainer/ActionsContainer"]
+[node name="CreateButton" type="Button" parent="VBoxContainer/ActionsContainer" unique_id=848504548]
 unique_name_in_owner = true
 texture_filter = 1
 texture_repeat = 1
@@ -122,7 +123,7 @@ icon = ExtResource("3_j1q7m")
 flat = true
 icon_alignment = 1
 
-[node name="EditButton" type="Button" parent="VBoxContainer/ActionsContainer"]
+[node name="EditButton" type="Button" parent="VBoxContainer/ActionsContainer" unique_id=126515516]
 unique_name_in_owner = true
 visible = false
 texture_filter = 1
@@ -135,7 +136,7 @@ icon = ExtResource("5_q0gfy")
 flat = true
 icon_alignment = 1
 
-[node name="CopyButton" type="Button" parent="VBoxContainer/ActionsContainer"]
+[node name="CopyButton" type="Button" parent="VBoxContainer/ActionsContainer" unique_id=851158633]
 unique_name_in_owner = true
 texture_filter = 1
 texture_repeat = 1
@@ -147,7 +148,7 @@ icon = ExtResource("4_tt4qt")
 flat = true
 icon_alignment = 1
 
-[node name="PasteButton" type="Button" parent="VBoxContainer/ActionsContainer"]
+[node name="PasteButton" type="Button" parent="VBoxContainer/ActionsContainer" unique_id=44881337]
 unique_name_in_owner = true
 texture_filter = 1
 texture_repeat = 1
@@ -161,7 +162,7 @@ icon = ExtResource("5_tdv8b")
 flat = true
 icon_alignment = 1
 
-[node name="DeleteButton" type="Button" parent="VBoxContainer/ActionsContainer"]
+[node name="DeleteButton" type="Button" parent="VBoxContainer/ActionsContainer" unique_id=1089399642]
 unique_name_in_owner = true
 texture_filter = 1
 texture_repeat = 1
