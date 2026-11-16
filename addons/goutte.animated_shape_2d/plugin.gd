@@ -2,7 +2,7 @@
 extends EditorPlugin
 
 #
-# This plugin adds the following to the Editor:
+# This plugin/addon adds the following to the Editor:
 # - An AnimatedShape2D Node you can add to your scenes in order to configure
 #   a CollisionShape2D with dynamic values per frame of an AnimatedSprite2D.
 #   This is very handy for making dynamic Hurtboxes, Solidboxes, or Hitboxes.
@@ -13,6 +13,7 @@ const SHAPE_FRAMES_EDITOR_SCENE := preload("./editor/shape_frames_bottom_panel_c
 
 var shape_frames_editor: Control
 var shape_frames_dock: EditorDock
+
 
 func _enter_tree():
 	# I. Register our shape frames editor in one of the bottom dock slots.
@@ -34,14 +35,14 @@ func _enter_tree():
 
 
 func _exit_tree():
-	# I. Deregister our dock and 
+	# I. Deregister our dock and free its nodes
 	remove_dock(self.shape_frames_dock)
 	self.shape_frames_editor.queue_free()  # zealous, but it's OK
 	self.shape_frames_editor = null
 	self.shape_frames_dock.queue_free()
 	self.shape_frames_dock = null
 	
-	# II. And don't forget to (un)suscribe — and hit the bell icon
+	# II. And don't forget to (un)subscribe — and hit the bell icon
 	if get_editor_interface().get_inspector().edited_object_changed.is_connected(
 		on_inspector_edited_object_changed,
 	):

@@ -9,6 +9,11 @@ class_name ShapeFramesBottomPanelControl
 
 const FRAME_SCENE := preload("./shape_frame_editor.tscn")
 
+## Don't set this below 1.0 or be ready to hunt some bugs.
+const MIN_ZOOM_LEVEL := 1.0
+## This maximum is arbitrary and I'm not convinced of its usefulness.
+const MAX_ZOOM_LEVEL := 16.0
+
 @onready var animation_names_item_list: ItemList = %AnimationNamesItemList
 @onready var frames_container := %FramesContainer
 
@@ -288,7 +293,8 @@ func _on_zoom_less_button_pressed():
 	#if self.zoom_level <= 1.0:
 		#new_zoom_level = self.zoom_level * 0.5
 	#new_zoom_level = max(0.125, new_zoom_level)
-	new_zoom_level = max(1.0, new_zoom_level)
+	new_zoom_level = max(MIN_ZOOM_LEVEL, new_zoom_level)
+	new_zoom_level = min(MAX_ZOOM_LEVEL, new_zoom_level)
 	set_zoom_level(new_zoom_level)
 
 
@@ -298,8 +304,8 @@ func _on_zoom_reset_button_pressed():
 
 func _on_zoom_more_button_pressed():
 	var new_zoom_level := self.zoom_level + 1.0
-	new_zoom_level = max(1.0, new_zoom_level)
-	new_zoom_level = min(16.0, new_zoom_level)
+	new_zoom_level = max(MIN_ZOOM_LEVEL, new_zoom_level)
+	new_zoom_level = min(MAX_ZOOM_LEVEL, new_zoom_level)
 	set_zoom_level(new_zoom_level)
 
 
