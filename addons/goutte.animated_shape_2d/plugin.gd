@@ -25,6 +25,7 @@ func _enter_tree():
 	self.shape_frames_dock.default_slot = EditorDock.DOCK_SLOT_BOTTOM
 	self.shape_frames_dock.add_child(self.shape_frames_editor)
 	add_dock(self.shape_frames_dock)
+	#self.shape_frames_dock.close()
 	
 	# II. Show/Hide it depending on what's inspected in the Inspector.
 	#     This could also work using what's selected in the Scene Tree Editor?
@@ -54,6 +55,7 @@ func _exit_tree():
 func update_bottom_panel(animated_shape: AnimatedShape2D):
 	if animated_shape == null:
 		self.shape_frames_dock.close()
+		self.shape_frames_editor.clear()
 		return
 	
 	self.shape_frames_dock.make_visible()
@@ -62,15 +64,19 @@ func update_bottom_panel(animated_shape: AnimatedShape2D):
 
 func on_inspector_edited_object_changed():
 	var edited_object := get_editor_interface().get_inspector().get_edited_object()
+	var animated_shape: AnimatedShape2D = null
+	
 	if edited_object is ShapeFrame2D:
 		return
-	if edited_object is CollisionShape2D and (edited_object as CollisionShape2D).owner == null:
-		return  # we're editing the previews' shape
+	if edited_object is CollisionShape2D:
+		if (edited_object as CollisionShape2D).owner == null:
+			return  # we're editing the previews' shape
+		if (edited_object as CollisionShape2D):  # TODO: only if it belongs to any AnimatedShape2D
+			return
 	if edited_object is Shape2D:
 		return  # same
 	if edited_object == null:
 		return  # same
-	var animated_shape: AnimatedShape2D = null
 	if edited_object is AnimatedShape2D:
 		animated_shape = edited_object as AnimatedShape2D
 	update_bottom_panel(animated_shape)

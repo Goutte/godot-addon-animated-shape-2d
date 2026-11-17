@@ -1,14 +1,13 @@
 @tool
 extends Resource
 class_name ShapeFrame2D
-#class_name Shape2DFrame
+#class_name Shape2DFrameDatum
 
 ## Data object for a single shape frame.
 ## Basically a configurator for a CollisionShape2D.
 ## Each frame of each animation of an AnimatedSprite2D will be matched to one
 ## of these, in a Dictionary in ShapeFrames2D.
 ## You can also use the metadata of this Resource to store custom records per frame.
-
 
 ## Position of the collision shape in its parent.
 @export var position := Vector2.ZERO:
@@ -48,7 +47,22 @@ func set_shape(value: Shape2D):
 @export var debug_color := Color.BLACK
 
 
-## Used to make dummy ; perhaps keep as a procedural API ?
+static func from_collision_shape(
+	collision_shape: CollisionShape2D,
+	use_duplicate_shape := false,
+) -> ShapeFrame2D:
+	var sf := ShapeFrame2D.new()
+	sf.disabled = collision_shape.disabled
+	sf.position = collision_shape.position
+	sf.rotation = collision_shape.rotation
+	if collision_shape.shape:
+		sf.shape = collision_shape.shape
+		if use_duplicate_shape:
+			sf.shape = sf.shape.duplicate(true)
+	return sf
+
+
+## Used to make dummy ; perhaps keep as a procedural API ? (meh)
 static func make_rectangle(
 	size: Vector2,
 	position := Vector2.ZERO,

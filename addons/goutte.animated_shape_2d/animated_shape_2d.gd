@@ -21,23 +21,36 @@ class_name AnimatedShape2D
 
 ## Animated sprite we're going to watch to figure out which shape we want.
 ## We're reading the animation name and frame from it.
-@export var animated_sprite: AnimatedSprite2D
+@export var animated_sprite: AnimatedSprite2D:
+	set(value):
+		animated_sprite = value
+		#configuration_changed.emit()
 
 ## Target collision shape whose shape we're going to write to.
 ## We're also going to configure this CollisionShape2D (position, disabled…)
 ## for each frame of the AnimatedSprite2D above.
-@export var collision_shape: CollisionShape2D
+@export var collision_shape: CollisionShape2D:
+	set(value):
+		collision_shape = value
+		#configuration_changed.emit()
 
 ## Shape data for each animation and frame of the animated sprite.
 ## This holds enough data to configure the collision shape for each frame
 ## of the animated sprite: shape, position, rotation, disabled…
-@export var shape_frames: ShapeFrames2D
+@export var shape_frames: ShapeFrames2D:
+	set(value):
+		shape_frames = value
+		#configuration_changed.emit()
 
 ## If [code]true[/code], use the initial shape in the target CollisionShape2D
 ## as fallback when the shape is not defined in the ShapeFrames2D.
 ## If [code]false[/code], do not use fallback and therefore disable the shape.
 ## This has lower priority than use_previous_as_fallback.
-@export var use_initial_as_fallback := true
+@export var use_initial_as_fallback := true:
+	set(value):
+		#print("set use_initial_as_fallback=%s" % [value])
+		use_initial_as_fallback = value
+		configuration_changed.emit()
 
 ## If [code]true[/code], use the previous shape in the target CollisionShape2D
 ## as fallback when the shape is not defined in the ShapeFrames2D.
@@ -45,7 +58,11 @@ class_name AnimatedShape2D
 ## This has higher priority than use_initial_as_fallback.
 ## This is handy if for example all your frames use the same shape,
 ## and shapes only change per animation.
-@export var use_previous_as_fallback := false
+@export var use_previous_as_fallback := false:
+	set(value):
+		#print("set use_previous_as_fallback=%s" % [value])
+		use_previous_as_fallback = value
+		configuration_changed.emit()
 
 ## If [code]true[/code], use call_deferred() to set CollisionShape2D properties.
 @export var use_deferred_calls := true
@@ -83,13 +100,19 @@ enum SHAPE_UPDATE_MODE {
 ## Weird things will happen if you change this at runtime.
 @export var update_shape_mode := SHAPE_UPDATE_MODE.UPDATE
 
-# This fallback is essentially an inlined ShapeFrame2D.
-# > I'm not sure why it's inlined like this and not a ShapeFrame2D.
-var fallback_disabled: bool
-var fallback_position: Vector2
-var fallback_rotation: float
-var fallback_shape: Shape2D
 
+## Emitted when some top-level properties changed.
+## Not emitted when data changed.  We only use this in the Editor.
+## It helps us update the UI to reflect the latest changes.
+## For now we mostly use it for use_initial_as_fallback and in-button shape previews.
+## Would love an @annotation instead of setters ; waiting for godot :)
+signal configuration_changed
+
+
+signal after_saved
+
+
+var initial_datum: ShapeFrame2D
 var initial_scale: Vector2
 var collision_shape_parent: Node2D
 
@@ -133,6 +156,7 @@ func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_EDITOR_POST_SAVE:
 			update_configuration_warnings()
+			after_saved.emit()
 
 
 func setup():
@@ -141,12 +165,11 @@ func setup():
 	if self.shape_frames == null:
 		return
 	
-	self.fallback_disabled = self.collision_shape.disabled
-	self.fallback_position = self.collision_shape.position
-	self.fallback_rotation = self.collision_shape.rotation
-	if self.collision_shape.shape:
-		# We might update the original collision shape's shape, so we duplicate
-		self.fallback_shape = self.collision_shape.shape.duplicate(true)
+	self.initial_datum = ShapeFrame2D.from_collision_shape(
+		self.collision_shape,
+		# We might update the original collision shape's shape, so we duplicate.
+		true,
+	)
 	
 	self.collision_shape_parent = self.collision_shape.get_parent()
 	if self.collision_shape_parent != null:
@@ -183,10 +206,10 @@ func update_shape():
 		# Improvement idea: allow flipping in this case as well
 		return
 	if shape == null and self.use_initial_as_fallback:
-		shape = self.fallback_shape
-		disabled = self.fallback_disabled
-		position = self.fallback_position
-		rotation = self.fallback_rotation
+		shape = self.initial_datum.shape
+		disabled = self.initial_datum.disabled
+		position = self.initial_datum.position
+		rotation = self.initial_datum.rotation
 	
 	update_collision_shape_shape(shape)
 	update_collision_shape_disabled(disabled)
@@ -195,6 +218,7 @@ func update_shape():
 	
 	if self.handle_flip_h and is_collision_shape_parent_flippable():
 		# Improvement idea: flip the CollisionBody2D itself and mirror its x pos
+		# > BEWARE Physics engines usually don't care much for these shenanigans
 		if self.animated_sprite.flip_h:
 			self.collision_shape_parent.scale.x = -self.initial_scale.x
 		else:

@@ -9,14 +9,14 @@ class_name ShapeFrameEditor
 const SHAPE_PREVIEW_SCRIPT := preload("./shape_preview.gd")
 
 
-# Using @export instead of @onready allows accessing these subnodes at any time,
-# including before ready and during the exit from the tree. (we want both)
-# We do have to manyually set them (once) in the inspector, which is OK.
+# Using @export instead of @onready or %SpriteButton allows accessing these subnodes at any time,
+# including **before ready** and **during the exit** from the tree. (we need both)
+# In exchange, we do have to manually set them (once) in the scene inspector.
 @export var sprite_button: Button  # %SpriteButton
 
 
 ## Animated shape resource we are editing.
-## This holds enough data to configure a CollisionShape2D for a specific frame.
+## This holds enough data to configure a CollisionShape2D per frame.
 var animated_shape: AnimatedShape2D
 ## Animation name of the AnimatedSprite2D we're targeting.
 var animation_name: String
@@ -24,6 +24,7 @@ var animation_name: String
 var frame_index: int
 
 ## Zoom level of the preview.  Only integers are supported in there for now.
+## The type is float for forward compatibility.
 var zoom_level := 1.0
 ## Bakground color of the preview.
 var background_color := Color.WEB_GRAY
@@ -36,7 +37,7 @@ signal frame_deselected
 signal changed
 
 
-## Mandatory dependency injection, since it's best to leave _init() alone.
+## Mandatory dependency injection, since I prefer to leave Godot's _init() alone.
 func configure(
 	animated_shape: AnimatedShape2D,
 	animation_name: String,
@@ -61,14 +62,37 @@ func set_background_color(new_background_color: Color):
 
 
 func _enter_tree():
+	connect_to_animated_shape()
 	connect_to_shape_frame()
+	add_tracker_to_collision_shape()
+	#print("SFE %s %d at index %d" % [self.animation_name, self.frame_index, get_index()])
 
 
 func _exit_tree():
+	remove_tracker_from_collision_shape()
 	disconnect_from_shape_frame()
+	disconnect_from_animated_shape()
+	
 	remove_preview_of_shape_frame()
 	if is_selected():
 		frame_deselected.emit()
+
+
+func connect_to_animated_shape():
+	self.animated_shape.after_saved.connect(on_after_saved)
+
+
+func disconnect_from_animated_shape():
+	self.animated_shape.after_saved.disconnect(on_after_saved)
+
+
+func on_after_saved():
+	# This is a cheap way to make sure we're still in sync.
+	# To dispense of doing this:
+	# 1. When we use the fallback on the previous shape, 
+	#    we need to listen to changes on the previous frame editor,
+	#    and that's another nest of serpents ; this is fine for now.
+	update_button_shape_preview()
 
 
 func build(button_group: ButtonGroup):
@@ -77,6 +101,44 @@ func build(button_group: ButtonGroup):
 	sprite_button.button_group = button_group
 
 
+func get_shape_frame_including_fallbacks() -> ShapeFrame2D:
+	if self.animated_shape == null:
+		return null
+	if self.animated_shape.shape_frames == null:
+		return null
+	
+	var shape_frame := get_shape_frame()
+	var actual_shape_frame := shape_frame
+	
+	if actual_shape_frame == null and self.animated_shape.use_previous_as_fallback:
+		
+		# For a brief moment, during update, we might have twice the amount of nodes.
+		# The old ones, being deleted, and the new ones.  So, this assertion fails.
+		# We could put an await after the queue_free there but it creates a flicker.
+		# It works better to check is_queued_for_deletion() here instead.
+		#assert(
+			#get_index() == -1 or get_index() == self.frame_index,
+			#"index %d != frame %d" % [get_index(), self.frame_index],
+		#)
+		
+		if self.get_index() > 0:
+			var p := get_parent().get_child(
+				self.get_index() - 1
+			) as ShapeFrameEditor
+			assert(p, "Previous shape frame editor not found.")
+			if p and not p.is_queued_for_deletion():
+				actual_shape_frame = p.get_shape_frame_including_fallbacks()
+	
+	if actual_shape_frame == null and self.animated_shape.use_initial_as_fallback:
+		var initial_datum := ShapeFrame2D.from_collision_shape(
+			self.animated_shape.collision_shape, false,
+		)
+		actual_shape_frame = initial_datum
+	
+	return actual_shape_frame
+
+
+#func get_shape_frame_datum() -> Shape2DFrameDatum:  # mmmmh i like this i think
 func get_shape_frame() -> ShapeFrame2D:
 	if self.animated_shape == null:
 		return null
@@ -132,6 +194,22 @@ func hide_link_marker():
 	%LinkMarker.hide()
 
 
+func update_button_shape_preview():
+	#var shape_frame := get_shape_frame()
+	var actual_shape_frame := get_shape_frame_including_fallbacks()
+	
+	if actual_shape_frame == null:
+		%ShapeHolder.shape = null
+	else:
+		%ShapeHolder.shape = actual_shape_frame.get_shape()
+		%ShapeHolder.disabled = actual_shape_frame.disabled
+		%ShapeHolder.position = actual_shape_frame.position
+		%ShapeHolder.rotation = actual_shape_frame.rotation
+		%ShapeHolder.debug_color = self.animated_shape.collision_shape.debug_color
+		if actual_shape_frame.debug_color != Color.BLACK:
+			%ShapeHolder.debug_color = actual_shape_frame.debug_color
+
+
 ## The crux of the matter ; update the scene according to the data.
 func update():
 	if self.animated_shape == null:
@@ -151,7 +229,7 @@ func update():
 	if %SpriteFrameTexture.texture_repeat == TEXTURE_REPEAT_PARENT_NODE:
 		%SpriteFrameTexture.texture_repeat = TEXTURE_REPEAT_DISABLED
 	
-	# II. Origin (0, 0) of the parent of the collision shape,
+	# II. Define Origin (0, 0) of the parent of the collision shape,
 	# relative to the sprite, to help positioning our collision shape
 	# at the right spot relative to the sprite in this preview.
 	var collision_shape_parent_transform := Transform2D()
@@ -174,21 +252,28 @@ func update():
 		self.animated_shape.animated_sprite.offset
 	)
 	
-	# III. Display the preview of the collision shape.
+	
 	if self.animated_shape.shape_frames == null:
 		return
 	var shape_frame := get_shape_frame()
-	if shape_frame == null:
-		%ShapeHolder.shape = null
-	else:
-		%ShapeHolder.shape = shape_frame.get_shape()
-		%ShapeHolder.disabled = shape_frame.disabled
-		%ShapeHolder.position = shape_frame.position
-		%ShapeHolder.rotation = shape_frame.rotation
-		%ShapeHolder.debug_color = self.animated_shape.collision_shape.debug_color
-		if shape_frame.debug_color != Color.BLACK:
-			%ShapeHolder.debug_color = shape_frame.debug_color
-			
+	
+	
+	# III. Display the preview-in-button of the collision shape.
+	update_button_shape_preview()
+	
+	#var preview_shape_frame := shape_frame
+	#if preview_shape_frame == null and self.animated_shape.use_initial_as_fallback:
+		#preview_shape_frame = initial_datum
+	#if preview_shape_frame == null:
+		#%ShapeHolder.shape = null
+	#else:
+		#%ShapeHolder.shape = preview_shape_frame.get_shape()
+		#%ShapeHolder.disabled = preview_shape_frame.disabled
+		#%ShapeHolder.position = preview_shape_frame.position
+		#%ShapeHolder.rotation = preview_shape_frame.rotation
+		#%ShapeHolder.debug_color = self.animated_shape.collision_shape.debug_color
+		#if preview_shape_frame.debug_color != Color.BLACK:
+			#%ShapeHolder.debug_color = preview_shape_frame.debug_color
 	
 	# IV. Adjust the preview to the zoom level
 	%ZoomAdjuster.scale = Vector2.ONE * self.zoom_level
@@ -234,7 +319,7 @@ func update():
 		%DeleteButton.visible = true
 		%DeleteButton.disabled = false
 	
-	# L. 2D View Preview / Mouse GUI Editor
+	# L. 2D View Preview Gizmo / Mouse GUI Editor
 	if is_preview_showing():
 		preview_shape_frame()
 
@@ -258,6 +343,60 @@ func remove_shape_frame():
 	self.animated_shape.shape_frames.remove_shape_frame(self.animation_name, self.frame_index)
 
 
+#  _______             _
+# |__   __|           | |
+#    | |_ __ __ _  ___| | _____ _ __
+#    | | '__/ _` |/ __| |/ / _ \ '__|
+#    | | | | (_| | (__|   <  __/ |
+#    |_|_|  \__,_|\___|_|\_\___|_|
+#
+# This tracker is used to get updates of position changes in the CollisionShape2D.
+# We can't add a script to the CollisionShape2D (user might have one already),
+# and we can't get updates on the position without using _notification().
+# So we embed a tracking gizmo as child of the CollisionShape2D we're working with,
+# but only in the Editor, so we can update our previews-in-button in the bottom panel.
+# For now, this is only useful when the user has activated "use_initial_as_fallback".
+
+var collision_shape_tracker: TransformTracker2D
+
+
+func add_tracker_to_collision_shape():
+	if not self.animated_shape:
+		return
+	if not self.animated_shape.collision_shape:
+		return
+	assert(self.collision_shape_tracker == null)
+	self.collision_shape_tracker = TransformTracker2D.new()
+	self.collision_shape_tracker.name = "TransformTracker"
+	self.collision_shape_tracker.owner = null
+	self.animated_shape.collision_shape.add_child(self.collision_shape_tracker)
+	
+	self.collision_shape_tracker.transform_changed.connect(on_tracker_transform_changed)
+
+
+func remove_tracker_from_collision_shape():
+	if self.collision_shape_tracker:
+		if self.collision_shape_tracker.transform_changed.is_connected(on_tracker_transform_changed):
+			self.collision_shape_tracker.transform_changed.disconnect(on_tracker_transform_changed)
+		
+		self.collision_shape_tracker.queue_free()
+		self.collision_shape_tracker = null
+
+
+func on_tracker_transform_changed():
+	# WARNING: Something VERY WRONG is happening in Godot here.
+	# If we don't read global_position, collision_shape.position is NOT updated.
+	var _wtf_try_removing_me = self.collision_shape_tracker.global_position
+	
+	# Hunt: waiting for a frame solves nothing, so it's not a concurrency issue.
+	#await get_tree().process_frame
+	
+	# Hunt: all in all this looks like a cache invalidation issue in Godot.
+	
+	# Anyway, for now our "workaraound" works, let's update our button preview.
+	update_button_shape_preview()
+
+
 #  _____                _
 # |  __ \              (_)
 # | |__) | __ _____   ___  _____      __
@@ -267,7 +406,7 @@ func remove_shape_frame():
 #
 # The big one shown in the 2D Editor when we select this shape frame.
 # This is actually more than a preview since we can *edit* the shape with it.
-# Perhaps we should call this Gizmo, to distinguish it from the bottom preview.
+# Perhaps we should call this Gizmo, to distinguish it from the button preview.
 
 
 var sprite_preview: AnimatedSprite2D
@@ -323,15 +462,20 @@ func preview_shape_frame():
 	if shape_frame != null:
 		if not is_instance_valid(preview_shape):
 			preview_shape = CollisionShape2D.new()
-			preview_shape.name = &"PreviewCollisionShape2D"
+			preview_shape.name = &"PreviewGizmoCollisionShape2D"
 			preview_shape.set_script(SHAPE_PREVIEW_SCRIPT)
 			preview_shape.rectangle_changed.connect(on_preview_shape_rectangle_changed)
 			preview_shape.item_rect_changed.connect(on_preview_shape_rect_changed)
 			self.animated_shape.collision_shape.add_sibling(preview_shape)
 		preview_shape.shape = shape_frame.shape
 		preview_shape.disabled = shape_frame.disabled
+		
+		# Idea: Here, perhaps consider doing only one transform modification,
+		#       since we listen to transform changes and act on them.
 		preview_shape.position = shape_frame.position
 		preview_shape.rotation = shape_frame.rotation
+		# ———————————————————————————————————————————————————————————————————
+		
 		preview_shape.debug_color = self.animated_shape.collision_shape.debug_color
 		if shape_frame.debug_color != Color.BLACK:
 			preview_shape.debug_color = shape_frame.debug_color
@@ -373,7 +517,7 @@ func preview_shape_frame():
 # name: @WindowWrapper@11833 class: WindowWrapper
 # name: @EditorAssetLibrary@12226 class: EditorAssetLibrary
 # I'm not sure why the node names look like this and at this point I'm too afraid to ask.
-# Anyway, we can discriminate using the class name, that's good enough.
+# Anyway, we can discriminate using the class name for now, that's good enough.
 func get_mouse_mode_button_by_icon(icon_name: StringName) -> Button:
 	var main_screen: Control = EditorInterface.get_editor_main_screen()
 	var editor_class: String = "CanvasItemEditor"
@@ -405,13 +549,16 @@ func get_mouse_mode_button_by_icon(icon_name: StringName) -> Button:
 
 
 func on_preview_shape_rectangle_changed():
-	update_from_preview_shape()
+	# We defer the call because transform notifications are synchronous
+	# and we modify position and rotation independently.
+	# We would not need to deferif  we were to modify the transform in one pass.
+	update_from_preview_shape.call_deferred()
 
 
 func on_preview_shape_rect_changed():
-	# I wanna know when this starts working.
+	# I wanna know when this starts working. (or understand why I'm confused)
 	print("Oh, now item_rect_changed signal works.  Used to not.")
-	# Enable this when it works, and remove workaraound?
+	# Enable this when it works, and remove workaround? (see shape_preview.gd)
 	#update_from_preview_shape()
 
 
@@ -434,6 +581,7 @@ func update_from_preview_shape():
 #
 
 ## UndoRedo won't accept calling methods on signals, so we'll call this instead.
+## It's the same name as the method of Resource — it has a similar purpose.
 func emit_changed():
 	self.changed.emit()
 
@@ -496,7 +644,7 @@ func _on_copy_button_pressed():
 
 func _on_paste_button_pressed():
 	var previous_shape_frame := get_shape_frame()
-	var copied_instance_id: int = str_to_var(DisplayServer.clipboard_get())
+	var copied_instance_id: int = str_to_var(DisplayServer.clipboard_get()) as int
 	if copied_instance_id == null:
 		return
 	var pasted_shape_frame: ShapeFrame2D = instance_from_id(copied_instance_id)

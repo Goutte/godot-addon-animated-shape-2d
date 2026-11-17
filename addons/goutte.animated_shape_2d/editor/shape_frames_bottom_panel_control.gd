@@ -53,6 +53,13 @@ func configure(
 
 
 func clear():
+	if self.animated_shape:
+		if self.animated_shape.configuration_changed.is_connected(
+			on_animated_shape_configuration_changed,
+		):
+			self.animated_shape.configuration_changed.disconnect(
+				on_animated_shape_configuration_changed,
+			)
 	self.animation_names_item_list.deselect_all()
 	self.animation_names_item_list.clear()
 	self.animated_shape = null
@@ -79,6 +86,9 @@ func rebuild_gui(
 	
 	clear()
 	self.animated_shape = for_animated_shape
+	
+	if not self.animated_shape.configuration_changed.is_connected(on_animated_shape_configuration_changed):
+		self.animated_shape.configuration_changed.connect(on_animated_shape_configuration_changed)
 	
 	#%BackgroundColorPicker.color = …  # from editor settings ?
 	self.background_color = %BackgroundColorPicker.color
@@ -113,6 +123,10 @@ func rebuild_gui(
 	rebuild_animation_names_item_list(self.animated_shape, animation_name)
 
 
+func on_animated_shape_configuration_changed():
+	self.rebuild_gui(self.animated_shape, true)
+
+
 func rebuild_animation_names_item_list(
 	animated_shape: AnimatedShape2D,
 	selected_animation_name: String,
@@ -141,6 +155,14 @@ func rebuild_animation_names_item_list(
 
 func rebuild_view_of_animation(animation_name: String):
 	clear_shape_frames()
+	
+	# Wait until all the cleared old nodes are actually removed from the tree.
+	# It's useful especially when updating previews with use_previous_as_fallback
+	# because we rely on the index of each frame editor to find the previous one.
+	# But: it creates a flicker when it updates, and that's annoying
+	#await get_tree().process_frame
+	#await get_tree().process_frame
+	
 	self.currently_selected_animation_name = animation_name
 	
 	self.frames_button_group = ButtonGroup.new()
