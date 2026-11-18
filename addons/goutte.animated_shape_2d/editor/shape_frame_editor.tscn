@@ -85,6 +85,7 @@ gizmo_extents = 6.0
 
 [node name="ShapeHolder" type="CollisionShape2D" parent="VBoxContainer/MarginContainer/SpriteFrameTexture/ZoomAdjuster/Origin" unique_id=1101123991]
 unique_name_in_owner = true
+editor_description = "The configuration warnings are expected and can't be suppressed, AFAIK."
 
 [node name="Control" type="Control" parent="VBoxContainer/MarginContainer" unique_id=416177632]
 layout_mode = 2

@@ -79,11 +79,13 @@ func _exit_tree():
 
 
 func connect_to_animated_shape():
-	self.animated_shape.after_saved.connect(on_after_saved)
+	if self.animated_shape:
+		self.animated_shape.after_saved.connect(on_after_saved)
 
 
 func disconnect_from_animated_shape():
-	self.animated_shape.after_saved.disconnect(on_after_saved)
+	if self.animated_shape:
+		self.animated_shape.after_saved.disconnect(on_after_saved)
 
 
 func on_after_saved():
@@ -114,7 +116,7 @@ func get_shape_frame_including_fallbacks() -> ShapeFrame2D:
 		
 		# For a brief moment, during update, we might have twice the amount of nodes.
 		# The old ones, being deleted, and the new ones.  So, this assertion fails.
-		# We could put an await after the queue_free there but it creates a flicker.
+		# We could put an await after the queue_free but it creates a flicker.
 		# It works better to check is_queued_for_deletion() here instead.
 		#assert(
 			#get_index() == -1 or get_index() == self.frame_index,
@@ -241,39 +243,30 @@ func update():
 		collision_shape_parent_transform
 	)
 	if self.animated_shape.animated_sprite.centered:
-		%Origin.position += (
-			self.animated_shape.animated_sprite.sprite_frames.get_frame_texture(
-				self.animation_name, self.frame_index,
-			).get_size()
-			*
-			0.5
-		)
+		var centerize = func():
+			if not is_inside_tree():
+				await tree_entered
+			# We wait for %SpriteFrameTexture to be sized by the engine
+			await get_tree().process_frame
+			assert(self.zoom_level != 0)
+			%Origin.position += (
+				(%SpriteFrameTexture as TextureRect).get_size()
+				*
+				0.5
+			) / self.zoom_level
+		centerize.call_deferred()
+	
 	%Origin.position -= (
 		self.animated_shape.animated_sprite.offset
 	)
 	
-	
+	# At this point, if there is no database, GTFO
 	if self.animated_shape.shape_frames == null:
 		return
 	var shape_frame := get_shape_frame()
 	
-	
 	# III. Display the preview-in-button of the collision shape.
 	update_button_shape_preview()
-	
-	#var preview_shape_frame := shape_frame
-	#if preview_shape_frame == null and self.animated_shape.use_initial_as_fallback:
-		#preview_shape_frame = initial_datum
-	#if preview_shape_frame == null:
-		#%ShapeHolder.shape = null
-	#else:
-		#%ShapeHolder.shape = preview_shape_frame.get_shape()
-		#%ShapeHolder.disabled = preview_shape_frame.disabled
-		#%ShapeHolder.position = preview_shape_frame.position
-		#%ShapeHolder.rotation = preview_shape_frame.rotation
-		#%ShapeHolder.debug_color = self.animated_shape.collision_shape.debug_color
-		#if preview_shape_frame.debug_color != Color.BLACK:
-			#%ShapeHolder.debug_color = preview_shape_frame.debug_color
 	
 	# IV. Adjust the preview to the zoom level
 	%ZoomAdjuster.scale = Vector2.ONE * self.zoom_level
@@ -385,7 +378,7 @@ func remove_tracker_from_collision_shape():
 
 func on_tracker_transform_changed():
 	# WARNING: Something VERY WRONG is happening in Godot here.
-	# If we don't read global_position, collision_shape.position is NOT updated.
+	# If we don't read global_position, collision_shape.position is NOT up-to-date.
 	var _wtf_try_removing_me = self.collision_shape_tracker.global_position
 	
 	# Hunt: waiting for a frame solves nothing, so it's not a concurrency issue.
