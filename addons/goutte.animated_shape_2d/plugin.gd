@@ -25,7 +25,7 @@ func _enter_tree():
 	self.shape_frames_dock.default_slot = EditorDock.DOCK_SLOT_BOTTOM
 	self.shape_frames_dock.add_child(self.shape_frames_editor)
 	add_dock(self.shape_frames_dock)
-	#self.shape_frames_dock.close()
+	self.shape_frames_dock.close()
 	
 	# II. Show/Hide it depending on what's inspected in the Inspector.
 	#     This could also work using what's selected in the Scene Tree Editor?
@@ -76,7 +76,7 @@ func on_inspector_edited_object_changed():
 	if edited_object is Shape2D:
 		return  # same
 	if edited_object == null:
-		return  # same
+		return
 	if edited_object is AnimatedShape2D:
 		animated_shape = edited_object as AnimatedShape2D
 	update_bottom_panel(animated_shape)
