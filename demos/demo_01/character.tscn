@@ -1,0 +1,59 @@
+[gd_scene format=3 uid="uid://cktrck67cgbja"]
+
+[ext_resource type="SpriteFrames" uid="uid://csp0g2v1im7lp" path="res://demos/demo_01/sprites/body_sprite_frames.tres" id="1_gkf8d"]
+[ext_resource type="Script" uid="uid://dwfqfcls884qg" path="res://addons/goutte.animated_shape_2d/animated_shape_2d.gd" id="2_h462g"]
+[ext_resource type="Script" uid="uid://dhd0ncuqcbifq" path="res://addons/goutte.animated_shape_2d/shape_frames_2d.gd" id="3_cpy4u"]
+[ext_resource type="Script" uid="uid://cvp2iaj47pldb" path="res://addons/goutte.animated_shape_2d/shape_frame_2d.gd" id="3_gkf8d"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kp7sn"]
+size = Vector2(34, 24)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gkf8d"]
+size = Vector2(34, 24)
+
+[sub_resource type="Resource" id="Resource_qrhn3"]
+script = ExtResource("3_gkf8d")
+position = Vector2(29, -23)
+shape = SubResource("RectangleShape2D_gkf8d")
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_swo26"]
+size = Vector2(34, 24)
+
+[sub_resource type="Resource" id="Resource_ypw5u"]
+script = ExtResource("3_gkf8d")
+position = Vector2(28, -22)
+shape = SubResource("RectangleShape2D_swo26")
+
+[sub_resource type="Resource" id="Resource_h462g"]
+script = ExtResource("3_cpy4u")
+data = {
+&"idle": [null, null, null],
+&"slash": [null, null, null, SubResource("Resource_qrhn3"), SubResource("Resource_qrhn3"), SubResource("Resource_qrhn3"), SubResource("Resource_qrhn3")],
+&"slash_combo": [null, null, null, SubResource("Resource_ypw5u"), SubResource("Resource_ypw5u"), SubResource("Resource_ypw5u"), SubResource("Resource_ypw5u")]
+}
+metadata/_custom_type_script = "uid://dhd0ncuqcbifq"
+
+[node name="Character" type="CharacterBody2D" unique_id=2139896357]
+metadata/_edit_lock_ = true
+
+[node name="Body" type="AnimatedSprite2D" parent="." unique_id=128614294]
+texture_filter = 1
+position = Vector2(0, -32)
+sprite_frames = ExtResource("1_gkf8d")
+animation = &"idle"
+frame = 1
+frame_progress = 0.14469872
+
+[node name="HitboxShape2D" type="CollisionShape2D" parent="." unique_id=894463024]
+visible = false
+position = Vector2(28, 10)
+shape = SubResource("RectangleShape2D_kp7sn")
+debug_color = Color(0.96862745, 0.15294118, 0.105882354, 0.41960785)
+
+[node name="AnimatedShape2D" type="Node" parent="HitboxShape2D" unique_id=608798986 node_paths=PackedStringArray("animated_sprite", "collision_shape")]
+script = ExtResource("2_h462g")
+animated_sprite = NodePath("../../Body")
+collision_shape = NodePath("..")
+shape_frames = SubResource("Resource_h462g")
+use_initial_as_fallback = false
+metadata/_custom_type_script = "uid://dwfqfcls884qg"

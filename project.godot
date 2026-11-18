@@ -1,0 +1,40 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Animated Shape 2D Addon"
+config/description="A demo/test project for the AnimatedShape2D addon."
+config/tags=PackedStringArray("addon")
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="uid://b53pwy7o4wbpo"
+
+[display]
+
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/goutte.animated_shape_2d/plugin.cfg")
+
+[gui]
+
+theme/default_theme_scale=2.0
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

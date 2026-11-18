@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://dicfqimhwx32w"]
+
+[ext_resource type="Script" uid="uid://cnmrmpqe5kpif" path="res://demos/demo_selection_menu.gd" id="1_dkb6o"]
+
+[node name="DemoSelectionMenu" type="Control" unique_id=1578029076]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_dkb6o")
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=126070840]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=1236441759]
+layout_mode = 2
+
+[node name="Demo01Button" type="Button" parent="CenterContainer/VBoxContainer" unique_id=827745010]
+layout_mode = 2
+text = "Demo 1"
+
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Demo01Button" to="." method="_on_demo_01_button_pressed"]
